@@ -11,13 +11,17 @@
   6. pos embeding沿着seq_length和d_model对应的两个维度add pos数值，标记位置信息。简单理解一个特征矩阵Q中任意一个数值通过向前diff和向上diff可以得到位置坐标，模型可以学到这种模式   
   7. token_embedding矩阵为可学习矩阵，实现将一个token_id转换为对应embedding向量，维度为d_model
   8. 训练阶段，对比rnn, transformer能够做到训练的并行，即```one sentence -> one output -> one loss```， 得力于注意力mask的设计
-  9. 预测阶段，于rnn相同，transformer自回归预测下一个token，当出现终止符则停止
+  9. 预测阶段，与rnn相同，transformer自回归预测下一个token，当出现终止符则停止
 · 论文链接[attendion all you need](https://arxiv.org/abs/1706.03762)，论文模型结构为encoder-decoder的结构
 
 # transformer 论文代码解读
+  首先根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及这类代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的ouput head是一个单独的线性层，与embeding层不共享权重
 
 # llm模型训练流程及方法
+  推荐根据轻量化llm项目完整走一遍对话llm模型的开发[Minimind](https://github.com/jingyaogong/minimind), 只要求跑通进行代码阅读的情况下，8Gb显存的卡将batchsize设置为1基本能吃得消   
 ## 01 pretrained
+  prtrained环节目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字输出符合逻辑的话一段话，简而言之就是字接龙。   
+  prtrained的输入是input_ids[:-1]， 标签是input_ids[1:]，input_ids是指文字经过tokenize后的idlist，如```我爱你 --> <s>我爱你<\s> --> [1, 2, 23, 4, 2]```，之所以输入与标签要错一位，目的在于实现预测下一个token
 ## 02 sft
 ### full sft
 ### lora sft
