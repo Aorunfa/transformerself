@@ -1,5 +1,6 @@
-# transformerself
+# transformerself 介绍
 一个用于transformer llm模型学习的库，梳理llm训练的的基本步骤，微调方法及原理， 整理能快速理解并上手的代码实战项目
+
 # transformer 论文原理
 
 # transformer 论文代码解读
