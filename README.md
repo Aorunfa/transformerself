@@ -19,13 +19,13 @@
 
 # llm模型训练流程及方法
   推荐根据轻量化llm项目完整走一遍对话llm模型的开发[Minimind](https://github.com/jingyaogong/minimind), 只要求跑通进行代码阅读的情况下，8Gb显存的卡将batchsize设置为1基本能吃得消   
-## 01 pretrained
-  · prtrained的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字输出符合逻辑的话一段话，简而言之就是字接龙  
-  · prtrained的输入是input_ids[:-1]， 标签是input_ids[1:]，input_ids是指文字经过tokenize后的idlist，如```我爱你 --> <s>我爱你<\s> --> [1, 2, 23, 4, 2]```，之所以输入与标签要错一位，目的在于实现预测下一个token的监督学习，例如输入文字是”我爱你啊“， 那么预测下一个token逻辑是```我 --> 我爱; 我爱 --> 我爱你；我爱你 --> 我爱你啊```， 使用mask能对信息进遮掩，实现并行训练，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的```ouput[0]```则由```<s>我```得到  
-  · prtrained的损失函数为corss_entropy，模型输出的logits维度为(batch_size, max_seq_length, voc_size), max_seq_length为文字对齐到的最大长度，voc_size为词表的token数量。损失计算的逻辑为对logits沿最后的轴进行softmax得到几率，形状不变；沿着max_seq_length取出label对应的token_id计算corss_entropy；由于label的真实长度不一定为max_seq_length，需要设置一个真实token_id的掩码就行过滤
-## 02 sft
-  sft监督微调的目的是让模型具备对话能力，通过特殊的问答token模板然触发模型的回答;
-  sft监督微调输出需要经过对话模板构造，
+## 一. pretrained
+  01 prtrained的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字输出符合逻辑的话一段话，简而言之就是字接龙  
+  02 prtrained的输入是```input_ids[:-1]```， 标签是```input_ids[1:]```，input_ids是指文字经过tokenize后的idlist，如```我爱你 --> <s>我爱你<\s> --> [1, 2, 23, 4, 2]```，之所以输入与标签要错一位，目的在于实现预测下一个token的监督学习，例如输入文字是”我爱你啊“， 那么预测下一个token逻辑是```我 --> 我爱; 我爱 --> 我爱你；我爱你 --> 我爱你啊```， 使用mask能对信息进遮掩，实现并行训练，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的```ouput[0]```则由```<s>我```预测得到  
+  03 prtrained的损失函数为corss_entropy，模型输出的logits维度为(batch_size, max_seq_length, voc_size), max_seq_length为文字对齐到的最大长度，voc_size为词表的token数量。损失计算的逻辑为对logits沿最后的轴进行softmax得到几率，形状不变；沿着max_seq_length取出label对应的token_id计算corss_entropy；由于label的真实长度不一定为max_seq_length，需要设置一个真实token_id的掩码就行过滤
+## 二. sft
+  sft监督微调的目的是让模型具备对话能力，通过将prompt嵌入问答模版，如```用户<s>说:你是谁？</s>\n助手<s>回答:我是人工智能助手</s>\n```，构成一个新的语料微调pretrained模型，对话模板是为了引入特殊的字符，通过微调能够让模型理解问题句柄，从而预测问题后面的答案。
+  sft与prtrained区别在于损失的计算以及训练的参数。sft只计算output中对应标签回答的部分，其余部分不计入损失，但这些部分会在attention中被关注到；训练参数取决于不同的微调方法，常见：full sft, lora, bitfit, preEmbed, preSuffix, preLayer, adapter 
 ### full sft
 ### lora sft
 ### otrers sft
