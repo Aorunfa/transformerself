@@ -11,7 +11,7 @@
   6. pos embeding沿着seq_length和d_model对应的两个维度add pos数值，标记位置信息。简单理解一个特征矩阵Q中任意一个数值通过向前diff和向上diff可以得到位置坐标，模型可以学到这种模式   
   7. token_embedding矩阵为可学习矩阵，实现将一个token_id转换为对应embedding向量，维度为d_model
   8. 训练阶段，对比rnn, transformer能够做到训练的并行，即```one sentence -> one output -> one loss```， 得力于注意力mask的设计
-  9. 预测阶段，与rnn相同，transformer自回归预测下一个token，当出现终止符则停止  
+  9. 预测阶段，与rnn相同，transformer自回归预测下一个token，当出现终止符则停止
 · 论文链接[attendion all you need](https://arxiv.org/abs/1706.03762)，论文模型结构为encoder-decoder的结构
 
 # transformer 论文代码解读
