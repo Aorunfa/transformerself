@@ -5,24 +5,24 @@
 # transformer 论文代码解读
 
 # llm模型训练流程及方法
-## pretrainer
-## sft
+## 01 pretrained
+## 02 sft
 ### full sft
 ### lora sft
-## otrers sft
-## preference opimied
+### otrers sft
+## 03 preference opimized
 ### dpo
 ### rlhf
-## evalization
+## 04 evalization
 ...
 
 # appendix
-## Model structure
+## 01 Model structure
 ### RMSNorme VS LayerNorme
 ### sin-cos posistion enbeddinig vs ROPE
 ### linear attention
-## Fine tune
+## 02 Finetune
 ### Q-Lora
-## quantilization
-## others
+## 03 quantilization
+## 04 others
 ...
