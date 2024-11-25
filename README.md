@@ -27,8 +27,10 @@
   sft监督微调的目的是让模型具备对话能力，通过将prompt嵌入问答模版，如```用户<s>说:你是谁？</s>\n助手<s>回答:我是人工智能助手</s>\n```，构成一个新的语料微调pretrained模型，对话模板是为了引入特殊的字符，通过微调能够让模型理解问题句柄，从而预测问题后面的答案。
   sft与prtrained区别在于损失的计算以及训练的参数。sft只计算output中对应标签回答的部分，其余部分不计入损失，但这些部分会在attention中被关注到；训练参数取决于不同的微调方法，常见：full-sft, lora, bitfit, preEmbed, preSuffix, preLayer, adapter 
 ### full-sft 全量微调
-  全量微调是指在pretrained初始化权重下，对模型的全部参数进行训练，learningrate要设置比pretrained小很多
+  全量微调是指使用pretrained初始化权重，对模型的全部参数进行训练，语料设计和损失设计同上  
 ### lora-sft 低秩矩阵自适应微调
+  对学习矩阵W（Wq Wk Wv Wo ...）增加两个低秩矩阵A和B，对输入进行矩阵乘法并相加``` XW + XAB = X(W + AB) = XW` ```，``` W` ```为更新后的参数矩阵。假设W的维度为```(d_k, d_model)```, AB维度应该满足```(dk, r) (r, d_model)```，r为秩参数，r越大AB参数越多，W可更新的数值分布自由度更大。相比全量微调lora需要的显存大大减小，但在小模型上训练速度不一定更快（经验-小模型forward过程耗时占比大） 
+
   
 
 ### otrers sft 其他微调方法
