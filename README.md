@@ -22,7 +22,8 @@
 ## 一. pretrained
   01 prtrained的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字输出符合逻辑的话一段话，简而言之就是字接龙  
   02 prtrained的输入是```input_ids[:-1]```， 标签是```input_ids[1:]```，input_ids是指文字经过tokenize后的idlist，如```我爱你 --> <s>我爱你<\s> --> [1, 2, 23, 4, 2]```，之所以输入与标签要错一位，目的在于实现预测下一个token的监督学习，例如输入文字是”我爱你啊“， 那么预测下一个token逻辑是```我 --> 我爱; 我爱 --> 我爱你；我爱你 --> 我爱你啊```， 使用mask能对信息进遮掩，实现并行训练，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的```ouput[0]```则由```<s>我```预测得到  
-  03 prtrained的损失函数为corss_entropy，模型输出的logits维度为(batch_size, max_seq_length, voc_size), max_seq_length为文字对齐到的最大长度，voc_size为词表的token数量。损失计算的逻辑为对logits沿最后的轴进行softmax得到几率，形状不变；沿着max_seq_length取出label对应的token_id计算corss_entropy；由于label的真实长度不一定为max_seq_length，需要设置一个真实token_id的掩码就行过滤
+  03 prtrained的损失函数为corss_entropy，模型输出的logits维度为(batch_size, max_seq_length, voc_size), max_seq_length为文字对齐到的最大长度，voc_size为词表的token数量。损失计算的逻辑为对logits沿最后的轴进行softmax得到几率，形状不变；沿着max_seq_length取出label对应的token_id计算corss_entropy；由于label的真实长度不一定为max_seq_length，需要设置一个真实token_id的掩码就行过滤  
+  
 ## 二. sft
   sft监督微调的目的是让模型具备对话能力，通过将prompt嵌入问答模版，如```用户<s>说:你是谁？</s>\n助手<s>回答:我是人工智能助手</s>\n```，构成一个新的语料微调pretrained模型。  
   对话模板是为了引入特殊的字符，通过微调能够让模型理解问题句柄，从而预测问题后面的答案。  
@@ -32,7 +33,7 @@
 ### 02 lora-sft 低秩矩阵自适应微调
   [lora](https://arxiv.org/abs/2106.09685)对可学习矩阵W（Wq Wk Wv Wo ...）增加两个低秩矩阵A和B，对输入进行矩阵乘法并相加``` XW + XAB = X(W + AB) = XW` ```，``` W` ```为更新后的参数矩阵。假设W的维度为```(d_k, d_model)```, AB维度应该满足```(dk, r) (r, d_model)```，r为秩参数，r越大AB参数越多，W可更新的```△W```分布自由度更大。  
   相比全量微调lora需要的显存大大减小，但在小模型上训练速度不一定更快（小模型forward过程耗时占比大） 
-### 03 otrers sft 其他微调方法
+### 03 其他微调方法
   · PreEmbed，只微调token embedding参数矩阵，适应新的数据分布
   · Prompt-tuning 在输入token前增加特殊的提示token，只微调提示token的embeding向量参数，适合小模型适配下游任务
   · P-tunning 是Prompt tuning的进阶版，提示token可插入prompt的指定位置
@@ -40,10 +41,13 @@
   · Bitfit: 只微模型的偏置项，偏置项出现在所有线性层和Layernorma层中。    
   · Adapter，在transform模块的多头注意力与输出层之后增加一个adpter层，只微调adpter参数。 adpter包含```下投影linear + nolinear + 上投影linear; skip-connect结构```， 中间结构类似lora变现为nonlinear(XA)B的结构，skip-connect结构保证的模型能力最多退化为原模型；由于改变了Laynorm输入的数据分布，Laynorm的scale参数也需要加入训练。  
 
-
 ## 三. preference opimized
-### 01 dpo
-### 02 rlhf
+  偏好对齐(优化)的目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性等  
+### 01 rlhf
+
+### 02 dpo
+  直接偏好优化(direct-preference-opimized)与rlhf不同，直接跳过了奖励模型的训练，根据偏好数据一步到位训练得到对齐模型。[论文](https://arxiv.org/abs/2305.18290)解读可以参考博客[人人都能看懂的DPO数学原理](https://mp.weixin.qq.com/s/aG-5xTwSzvHXN4B73mfKMA)  
+  筒体而言，dpo从rlhf总体优化目标出发```模型输出尽可能接近偏好标签，尽可能偏离非偏好标签，尽可能少偏离原模型输出```，推导最优奖励模型的显示解，代入奖励模型的损失函数，一个只与待训模型有关的损失函数，该函数就是偏好优化的目标。  
 ## 四. evalization
 ...
 
