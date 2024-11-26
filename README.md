@@ -56,7 +56,7 @@
 ### RMSNorme VS LayerNorme
 ### sin-cos posistion enbeddinig vs ROPE
 ### linear attention
-## 02 Finetune
+## 02 Fine tune
 ### Q-Lora
 ## 03 quantilization
 ## 04 others
