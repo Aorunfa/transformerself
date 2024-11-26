@@ -34,7 +34,7 @@
 ### 03 otrers sft 其他微调方法
   · bitfit: 只微调线性层的偏置项  
   · preEmbed，只微调token embedding参数矩阵，适应新的数据分布  
-  · prefix  
+  · prefix，在attention中```K=XWk V=XWv```对X增加可学习前缀token embeding矩阵，作为虚拟的提示上下文, ```K=[P; X]Wk V=[P; X]Wv```P是可学习的参数矩阵，维度(L, d_model)，L表示需要增加的提示前缀长度，是超参数。```[P; X]```表示在X输入矩阵开始位置拼接矩阵P。prefix微调的是每一个transform层中的attention可学习前缀矩阵P，不同的层中，P不同  
   · preLayer  
   · adapter  
 
