@@ -44,20 +44,24 @@
 ## 三. preference opimized
   偏好对齐(优化)的目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性等  
 ### 01 rlhf
-
+  pending 需要梳理强化学习的基础理论才能进阶
 ### 02 dpo
   直接偏好优化(direct-preference-opimized)与rlhf不同，直接跳过了奖励模型的训练，根据偏好数据一步到位训练得到对齐模型。[论文](https://arxiv.org/abs/2305.18290)解读可以参考博客[人人都能看懂的DPO数学原理](https://mp.weixin.qq.com/s/aG-5xTwSzvHXN4B73mfKMA)  
   筒体而言，dpo从rlhf总体优化目标出发```模型输出尽可能接近偏好标签，尽可能偏离非偏好标签，尽可能少偏离原模型输出```，推导最优奖励模型的显示解，代入奖励模型的损失函数，得到一个只与待训模型有关的损失函数，该函数就是偏好优化的目标。  
 ## 四. evalization
+
 ...
 
 # appendix
 ## 01 Model structure
-### RMSNorme VS LayerNorme
+### RMSNorme VS LayerNorme VS batchNorm
+  操作解析 + 优势 
 ### sin-cos posistion enbeddinig vs ROPE
+  操作解析 + 优劣
 ### linear attention
+  解决的问题，组件设计
 ## 02 Fine tune
 ### Q-Lora
+  应用场景 双重量化 + lora微调，牺牲计算的效率换内存
 ## 03 quantilization
-## 04 others
-...
+  常见的量化方法有哪些
