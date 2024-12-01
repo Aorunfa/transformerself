@@ -57,11 +57,11 @@
 ## 01 Model structure
 ### RMSNorme VS LayerNorme VS batchNorm
   操作解析 + 优势 
-### sin-cos posistion enbeddinig vs ROPE
+### sin-cos pos embedding vs ROPE
   操作解析 + 优劣
 ### linear attention
   解决的问题，组件设计
-## 02 Fine tune
+## 02 Large model fine tune
 ### Q-Lora
   应用场景 双重量化 + lora微调，牺牲计算的效率换内存
 ## 03 quantilization
