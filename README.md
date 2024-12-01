@@ -51,6 +51,7 @@
   手撕dpo训练代码可以参考，有助于快速理解dpo损失的计算过程```/minimind/5-dpo_train_self.py```
 ## 四. evalization
 
+## 五. RNN补充
 ...
 
 # appendix
