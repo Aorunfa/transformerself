@@ -58,6 +58,11 @@
   03 RNN结构考虑单向的信息，t时刻的只能看到t时刻之前的信息编码，BRNN增加一个逆向传递结构（输入从后往前），实现t时刻双向信息编码。该抽象结构可以以基础RNN，GRU、LSTM为基模型进行搭建。不足之处在于对于需要完全输入信息后才能产生预测，不适用于实时输出的场景。  
   04 深层RNN可以叠加n个基rnn单元，当前层的输出作为上一层的输入，需要维护n个隐状态。同时，可以增加更加复杂的输入编码和输出解码的结构，实现更复杂的特征工程和信息过滤，适用于结构化时序数据的自动特征工程。  
 
+# 六. 进阶
+## GPT decoder-only
+
+## Bert encoder-only
+
 # appendix
 ## 01 Model structure
 ### RMSNorme VS LayerNorme VS batchNorm
