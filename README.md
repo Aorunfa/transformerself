@@ -70,6 +70,8 @@
   实践上，
 02 finetune: add outputhead and use certain fintune method
 
+## T5 encoder-decoder 集大成者
+
 
 
 # appendix
