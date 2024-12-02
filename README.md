@@ -60,8 +60,17 @@
 
 # 六. 进阶
 ## GPT decoder-only
+01 prtrained: Pedict next
+
+02 finetune
 
 ## Bert encoder-only
+01 prtrained: Masked language model
+  该阶段的训练目标挖词填空，引导模型理解上下文信息。与GPT pretrained区别在于，bert预测目标是被mask掉的单词部分，而不是预测下一个单词
+  实践上，
+02 finetune: add outputhead and use certain fintune method
+
+
 
 # appendix
 ## 01 Model structure
