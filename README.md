@@ -1,7 +1,7 @@
-# transformerself 介绍
+# 一. transformerself 介绍
 一个用于transformer llm模型学习的库，梳理llm训练的的基本步骤，微调方法及原理， 分享能快速理解并上手的代码实战项目
 
-# transformer 论文原理
+# 二. transformer 论文原理
 首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下要点  
   1. 注意力机制: ```q*K^T```做一次向量化查询，```sofmax(q*K^T / sqrt(d_model)) * V```完成查询结果的加权, sqrt(d_model)用于softmax缩放，将梯度集中在明显变化区域  
   2. 多头注意力设计: 折叠分组查询，使用更少的参数量，进行更多特征空间的交互
@@ -14,17 +14,17 @@
   9. 预测阶段，与rnn相同，transformer自回归预测下一个token，当出现终止符则停止  
 论文链接[attendion all you need](https://arxiv.org/abs/1706.03762)，论文模型结构为encoder-decoder的结构  
 
-# transformer 论文代码解读
+# 三. transformer 论文代码解读
   首先根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及这类代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的ouput head是一个单独的线性层，与embeding层不共享权重
 
-# llm模型训练流程及方法
+# 四. llm模型训练流程及方法
   推荐根据轻量化llm项目完整走一遍对话llm模型的开发[Minimind](https://github.com/jingyaogong/minimind), 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batchsize设置为1可以吃得消   
-## 一. pretrained
+## 4.1 pretrained
   01 prtrained的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字输出符合逻辑的话一段话，简而言之就是字接龙  
   02 prtrained的输入是```input_ids[:-1]```， 标签是```input_ids[1:]```，input_ids是指文字经过tokenize后的idlist，如```我爱你 --> <s>我爱你<\s> --> [1, 2, 23, 4, 2]```，之所以输入与标签要错一位，目的在于实现预测下一个token的监督学习，例如输入文字是”我爱你啊“， 那么预测下一个token逻辑是```我 --> 我爱; 我爱 --> 我爱你；我爱你 --> 我爱你啊```， 使用mask能对信息进遮掩，实现并行训练，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的```ouput[0]```则由```<s>我```预测得到  
   03 prtrained的损失函数为corss_entropy，模型输出的logits维度为(batch_size, max_seq_length, voc_size), max_seq_length为文字对齐到的最大长度，voc_size为词表的token数量。损失计算的逻辑为对logits沿最后的轴进行softmax得到几率，形状不变；沿着max_seq_length取出label对应的token_id计算corss_entropy；由于label的真实长度不一定为max_seq_length，需要设置一个真实token_id的掩码就行过滤  
   
-## 二. sft
+## 4.2 sft
   sft监督微调的目的是让模型具备对话能力，通过将prompt嵌入问答模版，如```用户<s>说:你是谁？</s>\n助手<s>回答:我是人工智能助手</s>\n```，构成一个新的语料微调pretrained模型。  
   对话模板是为了引入特殊的字符，通过微调能够让模型理解问题句柄，从而预测问题后面的答案。  
   sft与prtrained区别在于损失的计算以及训练的参数。sft只计算output中对应标签回答的部分，其余部分不计入损失，但这些部分会在attention中被关注到；训练参数取决于不同的微调方法，常见：full-sft, lora, bitfit, preEmbed, prefix, adapter等
@@ -41,7 +41,7 @@
   · Bitfit: 只微模型的偏置项，偏置项出现在所有线性层和Layernorma层中。    
   · Adapter，在transform模块的多头注意力与输出层之后增加一个adpter层，只微调adpter参数。 adpter包含```下投影linear + nolinear + 上投影linear; skip-connect结构```， 中间结构类似lora变现为nonlinear(XA)B的结构，skip-connect结构保证的模型能力最多退化为原模型；由于改变了Laynorm输入的数据分布，Laynorm的scale参数也需要加入训练。  
 
-## 三. preference opimized
+## 4.3 preference opimized
   偏好对齐(优化)的目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性等  
 ### 01 rlhf
   pending 需要梳理强化学习的基础理论才能进阶
@@ -49,14 +49,14 @@
   直接偏好优化(direct-preference-opimized)与rlhf不同，直接跳过了奖励模型的训练，根据偏好数据一步到位训练得到对齐模型。[论文](https://arxiv.org/abs/2305.18290)解读可以参考博客[人人都能看懂的DPO数学原理](https://mp.weixin.qq.com/s/aG-5xTwSzvHXN4B73mfKMA)  
   筒体而言，dpo从rlhf总体优化目标出发```模型输出尽可能接近偏好标签，尽可能偏离非偏好标签，尽可能少偏离原模型输出```，推导最优奖励模型的显示解，代入奖励模型的损失函数，得到一个只与待训模型有关的损失函数，该函数就是偏好优化的目标。 
   手撕dpo训练代码可以参考，有助于快速理解dpo损失的计算过程```/minimind/5-dpo_train_self.py```
-## 四. evalization
+### 4.4 evalization
 ... pending 需要系统梳理多llm task才能进阶
-## 五. RNN补充
+# 五. RNN补充
   在transformer出现后，在nlp的各任务领域，rnn逐渐被替代，但在一些结构化数据的时序预测仍广泛使用。原理解读参照[吴恩达《深度学习专项》笔记（十四）：循环神经网络基础](https://zhouyifan.net/2022/09/21/DLS-note-14/)， 代码实战参照[你的第一个PyTorch RNN模型——字母级语言模型](https://zhouyifan.net/2022/09/21/DLS-note-14-2/)  
-  RNN基本原理可以概括为，通过维护一个中间状态```a(t)```，捕捉数据时序依赖关系。t时刻中间状态```a(t)```由t-1刻状态、t时刻的输入通过可学习参数矩阵W进行转换```a(t) = W([a(t-1), x(t)])```，```[a(t-1), x(t)]```表示横向拼接。t时刻输出由解码器对隐状态```a(t)```进行解码```y(t) = decoder(a(t))```。  
-  RNN为了解决长时序依赖尾部数据难以获得首部数据信息， RNN变体模拟时序记忆的存储与衰减机制，代表性的有```GRU, LSTM```。GRU本质上考虑a(t)更新的偏好```a(t) = Wu * a(t) + (1 - Wu) a(t-1)```，增强中间隐状态对先前信息的留存空间。权重因子```Wu = sigmoid(W[a(t-1), x(t)]), W是可学习参数矩阵```。LSTM需要维护两个中间隐状态，更新的机制也更加复杂，但整体思想与GRU相似。GRU计算更高效，LSTM拟合能力更强。  
-  RNN结构考虑单向的信息，t时刻的只能看到t时刻之前的信息编码，BRNN增加一个逆向传递结构（输入从后往前），实现t时刻双向信息编码。该抽象结构可以以基础RNN，GRU、LSTM为基模型进行搭建。不足之处在于对于需要完全输入信息后才能产生预测，不适用于实时输出的场景。  
-  深层RNN可以叠加n个基rnn单元，当前层的输出作为上一层的输入，需要维护n个隐状态。同时，可以增加更加复杂的输入编码和输出解码的结构，实现更复杂的特征工程和信息过滤，适用于结构化时序数据的自动特征工程。  
+  01 RNN基本原理可以概括为，通过维护一个中间状态```a(t)```，捕捉数据时序依赖关系。t时刻中间状态```a(t)```由t-1刻状态、t时刻的输入通过可学习参数矩阵W进行转换```a(t) = W([a(t-1), x(t)])```，```[a(t-1), x(t)]```表示横向拼接。t时刻输出由解码器对隐状态```a(t)```进行解码```y(t) = decoder(a(t))```。  
+  02 RNN为了解决长时序依赖尾部数据难以获得首部数据信息， RNN变体模拟时序记忆的存储与衰减机制，代表性的有```GRU, LSTM```。GRU本质上考虑a(t)更新的偏好```a(t) = Wu * a(t) + (1 - Wu) a(t-1)```，增强中间隐状态对先前信息的留存空间。权重因子```Wu = sigmoid(W[a(t-1), x(t)]), W是可学习参数矩阵```。LSTM需要维护两个中间隐状态，更新的机制也更加复杂，但整体思想与GRU相似。GRU计算更高效，LSTM拟合能力更强。  
+  03 RNN结构考虑单向的信息，t时刻的只能看到t时刻之前的信息编码，BRNN增加一个逆向传递结构（输入从后往前），实现t时刻双向信息编码。该抽象结构可以以基础RNN，GRU、LSTM为基模型进行搭建。不足之处在于对于需要完全输入信息后才能产生预测，不适用于实时输出的场景。  
+  04 深层RNN可以叠加n个基rnn单元，当前层的输出作为上一层的输入，需要维护n个隐状态。同时，可以增加更加复杂的输入编码和输出解码的结构，实现更复杂的特征工程和信息过滤，适用于结构化时序数据的自动特征工程。  
 
 # appendix
 ## 01 Model structure
