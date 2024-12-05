@@ -58,22 +58,17 @@
   03 RNN结构考虑单向的信息，t时刻的只能看到t时刻之前的信息编码，BRNN增加一个逆向传递结构（输入从后往前），实现t时刻双向信息编码。该抽象结构可以以基础RNN，GRU、LSTM为基模型进行搭建。不足之处在于对于需要完全输入信息后才能产生预测，不适用于实时输出的场景。  
   04 深层RNN可以叠加n个基rnn单元，当前层的输出作为上一层的输入，需要维护n个隐状态。同时，可以增加更加复杂的输入编码和输出解码的结构，实现更复杂的特征工程和信息过滤，适用于结构化时序数据的自动特征工程。  
 
-# 六. 进阶 两类经典transformer结构介绍
+# 六. 进阶-经典transformer结构介绍
 ## GPT 
-  introduce: decoder only结构，通过mask attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如: 问答，机器翻译，摘要生成，音乐生成等
-  prtrained: 采用自回归语言模型训练方式，见四.llm模型训练流程及方法
-  finetune: 采用sft监督指令微调，对每一条input-out数据对处理为特殊模版input进行自回归训练，见到四.llm模型训练流程及方法
+  introduce: decoder only结构，通过mask attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如: 问答，机器翻译，摘要生成，音乐生成等  
+  prtrained: 采用自回归语言模型训练方式，见四.llm模型训练流程及方法  
+  finetune: 采用sft监督指令微调，对每一条input-out数据对处理为特殊模版input进行自回归训练，见到四.llm模型训练流程及方法  
 
 ## Bert
-  introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 情感分类，词性分类，语义相似度，多选问答，抽取问答
-  prtrained: Masked language model训练方式，随机遮掩token，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；特殊输入标记包括，完整句子标记，遮掩token mask标记，
-  finetune: 基于pretrained组件式的
-
-01 prtrained: Masked language model
-  该阶段的训练目标挖词填空，引导模型理解上下文信息。与GPT pretrained区别在于，bert预测目标是被mask掉的单词部分，而不是预测下一个单词
-  实践上，
-02 finetune: add outputhead and use certain fintune method
-
+  introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 情感分类，词性分类，语义相似度，多选问答，抽取问答  
+  prtrained: Masked language model训练方式，随机遮掩token，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；特殊输入标记包括，完整句子分隔符，遮掩token mask标记，  
+  finetune: 基于pretrained模型增加输出头，只需要训输出头即可达到不错的效果
+  
 ## T5 encoder-decoder 集大成者
 
 
