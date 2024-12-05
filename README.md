@@ -10,14 +10,14 @@
   5. FFN前馈神经网络, 隐藏层维度设置```4*d_model```，特征在更高维的隐空间交互，实现类似特征增强的效果, 4这个值目前看是约定俗成，没太多意义    
   6. pos embeding沿着seq_length和d_model对应的两个维度add pos数值，标记位置信息。简单理解一个特征矩阵Q中任意一个数值通过向前diff和向上diff可以得到位置坐标，模型可以学到这种模式   
   7. token_embedding矩阵为可学习矩阵，实现将一个token_id转换为对应embedding向量，维度为d_model
-  8. 训练阶段，对比rnn, transformer能够做到训练的并行，即```one sentence -> one output -> one loss```， 得力于注意力mask的设计
+  8. 训练阶段，对比rnn, transformer能够做到训练的并行，即输出一次性包含了所有next token的， 得力于attention mask的设计, 模拟信息串行
   9. 预测阶段，与rnn相同，transformer自回归预测下一个token，当出现终止符则停止  
 论文链接[attendion all you need](https://arxiv.org/abs/1706.03762)，论文模型结构为encoder-decoder的结构  
 
 # 三. transformer 论文代码解读
   首先根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及这类代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的ouput head是一个单独的线性层，与embeding层不共享权重
 
-# 四. llm模型训练流程及方法
+# 四. llm模型训练流程及方法 -- 完整训练一个GPT decoder-only的问答模型
   推荐根据轻量化llm项目完整走一遍对话llm模型的开发[Minimind](https://github.com/jingyaogong/minimind), 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batchsize设置为1可以吃得消   
 ## 4.1 pretrained
   01 prtrained的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字输出符合逻辑的话一段话，简而言之就是字接龙  
@@ -58,13 +58,14 @@
   03 RNN结构考虑单向的信息，t时刻的只能看到t时刻之前的信息编码，BRNN增加一个逆向传递结构（输入从后往前），实现t时刻双向信息编码。该抽象结构可以以基础RNN，GRU、LSTM为基模型进行搭建。不足之处在于对于需要完全输入信息后才能产生预测，不适用于实时输出的场景。  
   04 深层RNN可以叠加n个基rnn单元，当前层的输出作为上一层的输入，需要维护n个隐状态。同时，可以增加更加复杂的输入编码和输出解码的结构，实现更复杂的特征工程和信息过滤，适用于结构化时序数据的自动特征工程。  
 
-# 六. 进阶
-## GPT decoder-only
-01 prtrained: Pedict next
-
-02 finetune
+# 六. 进阶 两类经典transformer结构
+## GPT 
+  introduce: decoder only结构，通过mask attention保证只能看到上文信息，输出自回归预测下一个token。适用与输出为next token的所有sep2sep任务，如: 问答，机器翻译，摘要生成，音乐生成等
+  prtrained: 采用自回归语言模型训练方式，见四.llm模型训练流程及方法
+  finetune: 采用sft监督指令微调，对每一条input-out数据对处理为特殊模版input进行自回归训练，见到四.llm模型训练流程及方法
 
 ## Bert encoder-only
+
 01 prtrained: Masked language model
   该阶段的训练目标挖词填空，引导模型理解上下文信息。与GPT pretrained区别在于，bert预测目标是被mask掉的单词部分，而不是预测下一个单词
   实践上，
