@@ -66,8 +66,8 @@
 
 ## Bert
   introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 情感分类，词性分类，语义相似度，多选问答，抽取问答
-  prtrained: 
-  finetune: 
+  prtrained: Masked language model训练方式，随机遮掩token，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；特殊输入标记包括，完整句子标记，遮掩token mask标记，
+  finetune: 基于pretrained组件式的
 
 01 prtrained: Masked language model
   该阶段的训练目标挖词填空，引导模型理解上下文信息。与GPT pretrained区别在于，bert预测目标是被mask掉的单词部分，而不是预测下一个单词
