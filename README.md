@@ -74,8 +74,6 @@
   
 ## T5 encoder-decoder 集大成者
 
-
-
 # appendix
 ## 01 Model structure
 ### BatchNorm vs LayerNorm vs RMSNorm
@@ -83,8 +81,11 @@
   batchnorm沿着特征维度对batch一视同仁进行归一化；layernorm沿着batch维度对特征一视同仁进行归一化；两着有两个可学习参数，rescale参数和偏置参数。rmsnorm是layernorm的改良版，去掉了去中心化的计算过程，提高了计算效率，只有一个可学习参数rescale。
   batchnorm适用于卷积结构，训练时batchsize大均值与方差具备代表性。layernorm适transform、rnn结构，训练时batchsize小但是feature维度高。
   
-### sin-cos pos embedding vs ROPE
+### sin-cos pos embedding vs ROPE vs 可学习的位置编码
   操作解析 + 优劣
+  可学习的位置编码延展性差，无法处理出现超越编码长度的输入。sin-cos pe和ROPE可无限外延
+  
+  
   
 ### linear attention
   解决的问题，组件设计
