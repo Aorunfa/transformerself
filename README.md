@@ -72,7 +72,7 @@
             特殊输入标记包括，类别标记CLS，句子分隔标记[SEP]，遮掩token mask标记[MASK]。CLS标记标记主要表征句子的整体语义，主要作为分类输出头的输入。  
             embedding由三类向量相加：token emb + segment emb + pos emb，都是可学习参数  
             padding mask区分实际token和padding token，用于在softmax中归零padding token的权值  
-  finetune: 以bert作为backbone增加输出网络，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果
+  finetune: 以bert作为backbone增加输出网络，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果  
   practice: [bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)
   
 ## T5 encoder-decoder 集大成者
