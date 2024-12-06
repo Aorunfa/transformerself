@@ -79,6 +79,7 @@
 # appendix
 ## 01 Model structure
 ### BatchNorm vs LayerNorm vs RMSNorm
+  首先明确归一化的作用。数据经过每一层的变化和激活后，数据分布会不断向激活函数的上下限集中，此时激活函数所带来的梯度变化随着层变深而变小，最终出现梯度消失。另一方面，机器学习建模的前提是训练与测试集独立同分布，当出现不同分布的数据时，模型可能降效。基于此，人为将数据拉倒相同分布有利于增强模型鲁棒性。同时将分布绝大部分拉到0-1，集中在了激活函数的明显变化区域，有利于解决深层网络梯度消失问题。
   batchnorm沿着特征维度对batch一视同仁进行归一化；layernorm沿着batch维度对特征一视同仁进行归一化；两着有两个可学习参数，rescale参数和偏置参数。rmsnorm是layernorm的改良版，去掉了去中心化的计算过程，提高了计算效率，只有一个可学习参数rescale。
   batchnorm适用于卷积结构，训练时batchsize大均值与方差具备代表性。layernorm适transform、rnn结构，训练时batchsize小但是feature维度高。
   
