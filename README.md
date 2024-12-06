@@ -65,8 +65,11 @@
   finetune: 采用sft监督指令微调，对每一条input-out数据对处理为特殊模版input进行自回归训练，见到四.llm模型训练流程及方法  
 
 ## Bert
-  introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，词性分类，邮件分类...)，语义相似度，多选问答，抽取问答  
-  prtrained: 采用mask language和相邻句子判断训练方式，随机遮掩token(15%)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；特殊输入标记包括，CLS，句子分隔标记，遮掩token mask标记。CLS标记标记主要表征句子的整体语义，主要作为分类输出头的输入。   
+  introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类...)，语义相似度，多选问答，抽取问答，序列标注（词性分类 邮寄地址信息提取）
+  prtrained: 采用mask language和相邻句子判断训练方式。
+            mask language随机遮掩token(15%)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；
+            特殊输入标记包括，CLS，句子分隔标记，遮掩token mask标记。CLS标记标记主要表征句子的整体语义，主要作为分类输出头的输入。   
+            相邻句子判断，输入为句子+分隔标记+相邻句子，通过CLS位置的输出进行分类监督。这个训练步骤在后续的研究中逐渐淡化。
   finetune: 基于pretrained模型增加输出网络，只训输出网络或较小学习率全量微调即可达到不错的效果
   
 ## T5 encoder-decoder 集大成者
@@ -75,8 +78,10 @@
 
 # appendix
 ## 01 Model structure
-### RMSNorme VS LayerNorme VS batchNorm
-  操作解析 + 优势 
+### BatchNorm vs LayerNorm vs RMSNorm
+  batchnorm沿着特征维度对batch一视同仁进行归一化；layernorm沿着batch维度对特征一视同仁进行归一化；两着有两个可学习参数，rescale参数和偏置参数。rmsnorm是layernorm的改良版，去掉了去中心化的计算过程，提高了计算效率，只有一个可学习参数rescale。
+  batchnorm适用于卷积结构，训练时batchsize大均值与方差具备代表性。layernorm适transform、rnn结构
+  
 ### sin-cos pos embedding vs ROPE
   操作解析 + 优劣
 ### linear attention
