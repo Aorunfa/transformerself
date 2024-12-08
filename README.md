@@ -63,7 +63,8 @@
   introduce: decoder only结构，通过mask attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如: 问答，机器翻译，摘要生成，音乐生成等  
   prtrained: 采用自回归语言模型训练方式，见四.llm模型训练流程及方法  
   finetune: 采用sft监督指令微调，对每一条input-out数据对处理为特殊模版input进行自回归训练，见到四.llm模型训练流程及方法  
-
+  practice: 见到四minimind项目    
+  
 ## Bert
   introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类...)，语义相似度，多选问答，抽取问答，序列标注（词性分类 邮寄地址信息提取）
   prtrained: 采用mask language和相邻句子判断训练方式。  
@@ -73,7 +74,7 @@
             embedding由三类向量相加：token emb + segment emb + pos emb，都是可学习参数  
             padding mask区分实际token和padding token，用于在softmax中归零padding token的权值  
   finetune: 以bert作为backbone增加输出网络，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果  
-  practice: [bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)
+  practice: [bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)，快速理解整个bert模型结构，微调数据加载和训练过程。  
   
 ## T5 encoder-decoder 集大成者
 
