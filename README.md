@@ -39,7 +39,7 @@
 ## 4.2 SFT
 * sft监督微调的目的是让模型具备对话能力，通过将prompt嵌入问答模版，如`用户<s>说:你是谁？</s>\n助手<s>回答:我是人工智能助手</s>\n`，构成一个新的语料微调pretrained模型，继续训练模型对这类模版的词语接龙能力。
   
-* 对话模板通过引入特殊的字符，微调后能够让模型理解问题句柄，知道这是一个问题，从而触发预测问题后面的答案。  
+* 对话模板通过引入特殊的字符，微调后能够让模型理解问题句柄，知道这是一个问题，从而触发预测问题后面的答案。
 
 * sft与prtrained区别在于损失的计算以及训练的参数。sft只计算output中对应标签`回答: ***`的部分，其余部分不计入损失，但这些部分会在attention中被关注到；训练参数取决于不同的微调方法，常见> full-sft, lora, bitfit, preEmbed, prefix, adapter等。
 
@@ -49,28 +49,43 @@
 ### 02 lora-sft 低秩矩阵自适应微调
   [lora](https://arxiv.org/abs/2106.09685)对可学习矩阵**W（Wq Wk Wv Wo ...）**，增加两个低秩矩阵A和B，对输入进行矩阵乘法并相加`XW + XAB = X(W + AB) = XW‘`，`W'`为更新后的参数矩阵。假设原参数矩阵W的维度为`(d_k, d_model)`, 低秩矩阵A、B维度应该满足```(dk, r) (r, d_model)```，r为秩参数，r越大则A、B参数越多，W可更新的`△W`分布自由度更大。  
   
-  相比全量微调lora需要的显存大大减小，但在小模型上训练速度不一定更快> 小模型forward过程耗时占比z增加
+  相比全量微调lora需要的显存大大减小，但在小模型上训练速度不一定更快
+  > 小模型forward过程耗时占比增加
   
 ### 03 其他微调方法
 * PreEmbed，只微调token embedding参数矩阵，适应新的数据分布
-* Prompt-tuning 在输入token前增加特殊的提示token，只微调提示token的embeding向量参数，适合小模型适配下游任务
-* P-tunning 是Prompt tuning的进阶版，提示token可插入prompt的指定位置
-* Prefix，在attention中```K=XWk V=XWv```对X增加可学习前缀token embeding矩阵，作为虚拟的提示上下文, ```K=[P; X]Wk V=[P; X]Wv```P是可学习的参数矩阵，维度(L, d_model)，L表示需要增加的提示前缀长度，是超参数。```[P; X]```表示在X输入矩阵开始位置拼接矩阵P。prefix微调的是每一个transform层中的attention可学习前缀矩阵P，不同的层中，P不同。    
+  
+* Prompt tuning，在输入token前增加特殊的提示token，只微调提示token的embeding向量参数，适合小模型适配下游任务
+
+* P tunning，是Prompt tuning的进阶版，提示token可插入prompt的指定位置
+
+* Prefix，在attention中`K=X * Wk，V=X * Wv`对X增加可学习前缀token embeding矩阵，作为虚拟的提示上下文, `K=[P; X]Wk V=[P; X]Wv`P是可学习的参数矩阵，维度(L, d_model)，L表示需要增加的提示前缀长度，是超参数。`[P; X]`表示在X输入矩阵开始位置拼接矩阵P。
+  > prefix微调的是每一个transform层中的attention可学习前缀矩阵P，不同的层中，P不同。    
+  
 * Bitfit: 只微模型的偏置项，偏置项出现在所有线性层和Layernorma层中。    
-* Adapter，在transform模块的多头注意力与输出层之后增加一个adpter层，只微调adpter参数。 adpter包含```下投影linear + nolinear + 上投影linear; skip-connect结构```， 中间结构类似lora变现为nonlinear(XA)B的结构，skip-connect结构保证的模型能力最多退化为原模型；由于改变了Laynorm输入的数据分布，Laynorm的scale参数也需要加入训练。  
+
+* Adapter，在transform模块的多头注意力与输出层之后增加一个adpter层，只微调adpter参数。 adpter包含`下投影linear + nolinear + 上投影linear; skip-connect结构`， 中间结构类似lora变体为`nonlinear(XA)B`的结构，skip-connect结构保证的模型能力最多退化为原模型；由于改变了Laynorm输入的数据分布，Laynorm的scale参数也需要加入训练。  
 
 ---
 
 ## 4.3 preference opimized
-  偏好对齐(优化)的目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性等  
+  偏好对齐(优化)的目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性等。  
+
 ### 01 rlhf
   pending 需要梳理强化学习的基础理论才能进阶
+
 ### 02 dpo
-  直接偏好优化(direct-preference-opimized)与rlhf不同，直接跳过了奖励模型的训练，根据偏好数据一步到位训练得到对齐模型。[论文](https://arxiv.org/abs/2305.18290)解读可以参考博客[人人都能看懂的DPO数学原理](https://mp.weixin.qq.com/s/aG-5xTwSzvHXN4B73mfKMA)  
-  筒体而言，dpo从rlhf总体优化目标出发```模型输出尽可能接近偏好标签，尽可能偏离非偏好标签，尽可能少偏离原模型输出```，推导最优奖励模型的显示解，代入奖励模型的损失函数，得到一个只与待训模型有关的损失函数，该函数就是偏好优化的目标。 
-  手撕dpo训练代码可以参考，有助于快速理解dpo损失的计算过程```/minimind/5-dpo_train_self.py```
+直接偏好优化(direct-preference-opimized)与rlhf不同，直接跳过了奖励模型的训练，根据偏好数据一步到位训练得到对齐模型。[论文](https://arxiv.org/abs/2305.18290)解读可以参考博客[人人都能看懂的DPO数学原理](https://mp.weixin.qq.com/s/aG-5xTwSzvHXN4B73mfKMA)  
+
+筒体而言，dpo从rlhf总体优化目标出发```模型输出尽可能接近偏好标签，尽可能偏离非偏好标签，尽可能少偏离原模型输出```，推导最优奖励模型的显示解，代入奖励模型的损失函数，得到一个只与待训模型有关的损失函数，该函数就是偏好优化的目标。 
+
+> 手撕dpo训练代码可以参考本仓库的`/minimind/5-dpo_train_self.py`
+
 ### 4.4 evalization
 ... pending 需要系统梳理多llm task才能进阶
+
+---
+
 # 五. RNN补充
   在transformer出现后，在nlp的各任务领域，rnn逐渐被替代，但在一些结构化数据的时序预测仍广泛使用。原理解读参照[吴恩达《深度学习专项》笔记（十四）：循环神经网络基础](https://zhouyifan.net/2022/09/21/DLS-note-14/)， 代码实战参照[你的第一个PyTorch RNN模型——字母级语言模型](https://zhouyifan.net/2022/09/21/DLS-note-14-2/)  
   01 RNN基本原理可以概括为，通过维护一个中间状态```a(t)```，捕捉数据时序依赖关系。t时刻中间状态```a(t)```由t-1刻状态、t时刻的输入通过可学习参数矩阵W进行转换```a(t) = W([a(t-1), x(t)])```，```[a(t-1), x(t)]```表示横向拼接。t时刻输出由解码器对隐状态```a(t)```进行解码```y(t) = decoder(a(t))```。  
