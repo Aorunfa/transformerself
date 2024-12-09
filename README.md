@@ -23,7 +23,7 @@
 # 四. llm模型训练流程及方法 - 完整训练一个GPT decoder-only的问答模型
   推荐根据轻量化llm项目完整走一遍对话模型的开发[Minimind](https://github.com/jingyaogong/minimind)。
   
-  **只要求跑通进行代码阅读的情况下，4Gb显存的卡将batch_size设置为1可以吃得消。**
+  > 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batch_size设置为1可以吃得消。
   
 * 4.1 pretrained
   01 prtrained的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字输出符合逻辑的话一段话，简而言之就是字接龙  
