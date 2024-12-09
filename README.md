@@ -25,9 +25,12 @@
 根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的`ouput head`是一个单独的线性层，与embeding层不共享权重。
 
 # 四. llm模型训练流程及方法 - 完整训练一个GPT decoder-only的问答模型
-  推荐根据轻量化llm项目完整走一遍对话模型的开发[Minimind](https://github.com/jingyaogong/minimind)。
-  
-  > 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batch_size设置为1可以吃得消。
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+推荐根据轻量化llm项目完整走一遍对话模型的开发[Minimind](https://github.com/jingyaogong/minimind)。
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+> 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batch_size设置为1可以吃得消。
 
 ---
 
