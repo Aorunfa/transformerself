@@ -1,5 +1,5 @@
 # 一. transformerself 介绍
-    一个用于transformer llm模型学习的仓库，梳理llm训练的的基本步骤，微调方法及原理， 分享能快速理解并上手的代码实战项目
+  一个用于transformer llm模型学习的仓库，梳理llm训练的的基本步骤，微调方法及原理， 分享能快速理解并上手的代码实战项目
 
 # 二. transformer 论文原理
   首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下要点
