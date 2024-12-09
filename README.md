@@ -1,4 +1,4 @@
-# 一. transformerself 介绍
+# 一. 介绍
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 一个用于transformer llm模型学习的仓库，梳理llm训练的的基本步骤，微调方法及原理， 分享能快速理解并上手的代码实战项目
@@ -109,23 +109,32 @@
   
 * 深层RNN可以叠加n个基rnn单元，自下往上，当前层的输出作为上一层的输入，需要维护n个隐状态。同时，可以增加更加复杂的输入编码和输出解码的结构，实现更复杂的特征工程和信息过滤，**适用于结构化时序数据的自动特征工程。**
 
+---
+
 # 六. 进阶1-经典transformer结构介绍
+
 ## GPT 
-  introduce: decoder only结构，通过mask attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如: 问答，机器翻译，摘要生成，音乐生成等  
-  prtrained: 采用自回归语言模型训练方式，见四.llm模型训练流程及方法  
-  finetune: 采用sft监督指令微调，对每一条input-out数据对处理为特殊模版input进行自回归训练，见到四.llm模型训练流程及方法  
-  practice: 见到四minimind项目    
+* introduce: decoder only结构，通过mask self-attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如：问答，机器翻译，摘要生成，音乐生成等。
+
+* prtrained: 采用自回归语言模型训练方式，见四.llm模型训练流程及方法。
+
+* finetune: 采用sft监督指令微调，对每一条input-out数据对处理为特殊模版input进行自回归训练，见到四.llm模型训练流程及方法。
+
+* practice: 见到`四minimind项目`。   
   
 ## Bert
-  introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类...)，语义相似度，多选问答，抽取问答，序列标注（词性分类 邮寄地址信息提取）
-  prtrained: 采用mask language和相邻句子判断训练方式。  
-            mask language随机遮掩token(15%)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；  
-            相邻句子判断，输入为句子+分隔标记+相邻句子，通过CLS位置的输出进行分类监督。这个训练步骤在后续的研究中逐渐淡化。  
-            特殊输入标记包括，类别标记CLS，句子分隔标记[SEP]，遮掩token mask标记[MASK]。CLS标记标记主要表征句子的整体语义，主要作为分类输出头的输入。  
-            embedding由三类向量相加：token emb + segment emb + pos emb，都是可学习参数  
-            padding mask区分实际token和padding token，用于在softmax中归零padding token的权值  
-  finetune: 以bert作为backbone增加输出网络，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果  
-  practice: [bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)，快速理解整个bert模型结构，微调数据加载和训练过程。  
+* introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类...)，序列标注（词性分类 邮寄地址信息提取, 语义相似度，多选问答，抽取问答...
+
+* prtrained: 采用mask language和相邻句子判断进行预训练。  
+  > mask language随机遮掩token(15%)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；  
+  > 相邻句子判断，输入为句子+分隔标记+相邻句子，通过CLS位置的输出进行分类监督。这个训练步骤在后续的研究中逐渐淡化。  
+  > 特殊输入标记包括，类别标记`[CLS]`，句子分隔标记`[SEP]`，遮掩token标记`[MASK]`。`[CLS]`标记标记主要表征句子的整体语义，主要作为分类输出头的输入。  
+  > embedding由三类向量相加：`token emb + segment emb + pos emb`，都是可学习参数，形状分别为` `
+  > padding mask区分实际token和padding token，用于在softmax中归零padding token的权值  
+
+* finetune: 以bert作为backbone增加输出网络，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果  
+
+* practice: [bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)，快速理解整个bert模型结构，微调数据加载和训练过程。  
   
 ## T5 encoder-decoder 集大成者
 
