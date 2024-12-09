@@ -124,7 +124,7 @@
 * practice: 见到`四minimind项目`。   
   
 ## Bert
-* introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类...)，序列标注（词性分类 邮寄地址信息提取, 语义相似度，多选问答，抽取问答...。对于bert的解读可以参考[链接](https://github.com/datawhalechina/learn-nlp-with-transformers)
+* introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类, 多选问答，抽取问答...)，序列标注（词性标注 邮寄地址信息提取), 语义相似度...。对于bert的解读可以参考[链接](https://github.com/datawhalechina/learn-nlp-with-transformers)
 
 * prtrained: 采用mask language和相邻句子判断进行预训练。  
   > * mask language随机遮掩token(15%)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；
@@ -142,7 +142,16 @@
 * practice: [bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)，快速理解整个bert模型结构，微调数据的加载方式和训练过程。
   > 在本仓库中增加地址文本的序列标注代码，见`/Bert-Chinese-Text-Classification-Pytorch/seqlabel/train.py` 
   
-## T5 encoder-decoder 集大成者
+## T5 encoder-decoder 集成者
+* introduce: encoder-decoder结构， 优点， 适用于所有的NLP任务，
+
+* pretreined：
+
+* finetune：
+
+* prectice：
+
+
 
 ---
 
