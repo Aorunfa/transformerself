@@ -27,7 +27,7 @@
 
 ---
 
-## 4.1 pretrained
+## 4.1 Pretrained
 * prtrained的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字输出符合逻辑的话一段话，简而言之就是字接龙。
 
 * prtrained的输入是`input_ids[:-1]`， 标签是`input_ids[1:]`，input_ids是指文字经过tokenize后的id list，如`我爱你 --> <s>我爱你<\s> --> [1, 2, 23, 4, 2]`，之所以输入与标签要错一位，目的在于实现预测下一个token的监督学习，例如输入文字是”我爱你啊“， 那么预测下一个token逻辑是`我 --预测--> 我爱; 我爱 --> 我爱你；我爱你 --> 我爱你啊`， 使用mask能对信息进遮掩，实现并行训练，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的`ouput[0]`则由`<s>我`预测得到。
@@ -36,12 +36,16 @@
 
 ---
 
-## 4.2 sft
-  sft监督微调的目的是让模型具备对话能力，通过将prompt嵌入问答模版，如```用户<s>说:你是谁？</s>\n助手<s>回答:我是人工智能助手</s>\n```，构成一个新的语料微调pretrained模型。  
-  对话模板是为了引入特殊的字符，通过微调能够让模型理解问题句柄，从而预测问题后面的答案。  
-  sft与prtrained区别在于损失的计算以及训练的参数。sft只计算output中对应标签回答的部分，其余部分不计入损失，但这些部分会在attention中被关注到；训练参数取决于不同的微调方法，常见：full-sft, lora, bitfit, preEmbed, prefix, adapter等
+## 4.2 SFT
+* sft监督微调的目的是让模型具备对话能力，通过将prompt嵌入问答模版，如`用户<s>说:你是谁？</s>\n助手<s>回答:我是人工智能助手</s>\n`，构成一个新的语料微调pretrained模型，继续训练模型对这类模版的词语接龙能力。
+  
+* 对话模板通过引入特殊的字符，微调后能够让模型理解问题句柄，知道这是一个问题，从而触发预测问题后面的答案。  
+
+* sft与prtrained区别在于损失的计算以及训练的参数。sft只计算output中对应标签`回答: ***`的部分，其余部分不计入损失，但这些部分会在attention中被关注到；训练参数取决于不同的微调方法，常见> full-sft, lora, bitfit, preEmbed, prefix, adapter等。
+
 ### 01 full-sft 全量微调
-  全量微调是指使用pretrained初始化权重，对模型的全部参数进行训练，语料设计和损失设计同上  
+全量微调是指使用pretrained初始化权重，对模型的全部参数进行训练，语料设计和损失设计同上
+  
 ### 02 lora-sft 低秩矩阵自适应微调
   [lora](https://arxiv.org/abs/2106.09685)对可学习矩阵W（Wq Wk Wv Wo ...）增加两个低秩矩阵A和B，对输入进行矩阵乘法并相加``` XW + XAB = X(W + AB) = XW` ```，``` W` ```为更新后的参数矩阵。假设W的维度为```(d_k, d_model)```, AB维度应该满足```(dk, r) (r, d_model)```，r为秩参数，r越大AB参数越多，W可更新的```△W```分布自由度更大。  
   相比全量微调lora需要的显存大大减小，但在小模型上训练速度不一定更快（小模型forward过程耗时占比大） 
@@ -52,6 +56,8 @@
   · Prefix，在attention中```K=XWk V=XWv```对X增加可学习前缀token embeding矩阵，作为虚拟的提示上下文, ```K=[P; X]Wk V=[P; X]Wv```P是可学习的参数矩阵，维度(L, d_model)，L表示需要增加的提示前缀长度，是超参数。```[P; X]```表示在X输入矩阵开始位置拼接矩阵P。prefix微调的是每一个transform层中的attention可学习前缀矩阵P，不同的层中，P不同。    
   · Bitfit: 只微模型的偏置项，偏置项出现在所有线性层和Layernorma层中。    
   · Adapter，在transform模块的多头注意力与输出层之后增加一个adpter层，只微调adpter参数。 adpter包含```下投影linear + nolinear + 上投影linear; skip-connect结构```， 中间结构类似lora变现为nonlinear(XA)B的结构，skip-connect结构保证的模型能力最多退化为原模型；由于改变了Laynorm输入的数据分布，Laynorm的scale参数也需要加入训练。  
+
+---
 
 ## 4.3 preference opimized
   偏好对齐(优化)的目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性等  
