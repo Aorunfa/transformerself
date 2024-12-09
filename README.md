@@ -133,7 +133,7 @@
   
   > * 特殊输入标记包括，类别标记`[CLS]`，句子分隔标记`[SEP]`，遮掩token标记`[MASK]`。`[CLS]`标记标记主要表征句子的整体语义，主要作为分类输出头的输入。  
   
-  > * embedding由三类向量相加：`token emb + segment emb + pos emb`，segment区分上句或下句，三者都是可学习参数，形状分别为`(max_len, d_model), (2, d_model), (max_len, d_model)`。
+  > * embedding由三类向量相加：`token emb + segment emb + pos emb`，segment区分上句或下句，三者都是可学习参数，形状分别为`(voc_size, d_model), (2, d_model), (max_len, d_model)`。
   
   > * padding mask区分实际token和padding token，用于在softmax中归零padding token的权值，例如一个token查到paddingtoken，计算得到的注意力权重应该为0。
 
@@ -147,28 +147,38 @@
 # 七. 进阶2-模型压缩
 ## 蒸馏
 
-## 剪枝
-
 ## 量化
 
+## 剪枝
 
-# appendix
+
+# 附录
 ## Model structure
-* BatchNorm vs LayerNorm vs RMSNorm
-  * 首先明确归一化的作用。数据经过每一层的变化和激活后，数据分布会不断向激活函数的上下限集中，此时激活函数所带来的梯度变化随着层变深而变小，最终出现梯度消失。另一方面，机器学习建模的前提是训练与测试集独立同分布，当出现不同分布的数据时，模型可能降效。基于此，人为将数据拉倒相同分布有利于增强模型鲁棒性。同时将分布绝大部分拉到0-1，集中在了激活函数的明显变化区域，有利于解决深层网络梯度消失问题。
-  batchnorm沿着特征维度对batch一视同仁进行归一化；layernorm沿着batch维度对特征一视同仁进行归一化；两着有两个可学习参数，rescale参数和偏置参数。rmsnorm是layernorm的改良版，去掉了去中心化的计算过程，提高了计算效率，只有一个可学习参数rescale。
-  batchnorm适用于卷积结构，训练时batchsize大均值与方差具备代表性。layernorm适transform、rnn结构，训练时batchsize小但是feature维度高。
+### 1. BatchNorm vs LayerNorm vs RMSNorm
+
+> 首先明确归一化的作用。数据经过每一层的变化和激活后，数据分布会不断向激活函数的上下限集中，此时激活函数所带来的梯度变化随着层变深而变小，最终出现梯度消失。
+
+> 另一方面，机器学习建模的前提是训练与测试集独立同分布，当出现不同分布的数据时，模型可能降效。基于此，人为将数据拉倒相同分布有利于增强模型鲁棒性。同时将分布主体scale到0-1，集中在激活函数的明显变化区域，有利于解决深层网络梯度消失问题。
+
+* batchnorm沿着特征维度对batch一视同仁进行归一化；layernorm沿着batch维度对特征一视同仁进行归一化；两者有两个可学习参数，rescale参数和偏置参数。
+
+* rmsnorm是layernorm的改良版，去掉了去中心化的计算过程，提高了计算效率，只有一个可学习参数即rescale参数。
+
+* batchnorm适用于卷积结构，训练时batchsize大均值与方差具备代表性。layernorm适transform、rnn结构，训练时batchsize小但是feature维度高；另一方面，图像数据是客观存在的表示，对每个sample的channel特征进行归一化具有实际意义。而自然语言的表示是人为假设，通过embeding转换为数字表示，对每个sample特征维度进行归一化缺少实际意义。
   
-### sin-cos pos embedding vs ROPE vs 可学习的位置编码
-  操作解析 + 优劣
-  可学习的位置编码好处是位置表征能力更强，但延展性差，无法处理出现超越编码长度的输入，bert模型使用该编码方式。
+### 2. sin-cos pos embedding vs ROPE vs 可学习的位置编码
+
+* 可学习的位置编码好处是位置表征能力更强，但延展性差，无法处理出现超越编码长度的输入，bert模型使用该编码方式。
+
+*  sin-cos pos对正余弦函数进行取值进行绝对位置编码，而rope则依次对相邻两个数值进行旋转变换，前后两者间具有相对的旋转位置关系，实现相对位置编码。两者都具有可延展性，rope在捕捉长序列的相对关系上更具有优势。
   
   
   
-### linear attention
+### 3. linear attention
   解决的问题，组件设计
-## 02 Large model fine tune
+  
+## Large model fine tune
+
 ### Q-Lora
   应用场景 双重量化 + lora微调，牺牲计算的效率换内存
-## 03 quantilization
-  常见的量化方法有哪些
+
