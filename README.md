@@ -18,7 +18,7 @@
 **论文链接[attendion all you need](https://arxiv.org/abs/1706.03762)**，论文模型结构为encoder-decoder的结构，两个组件的经典模型见第六节。
 
 # 三. transformer 论文代码解读
-&nbsp;&nbsp;&nbsp;&nbsp; 根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的`ouput head`是一个单独的线性层，与embeding层不共享权重。
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的`ouput head`是一个单独的线性层，与embeding层不共享权重。
 
 # 四. llm模型训练流程及方法 - 完整训练一个GPT decoder-only的问答模型
   推荐根据轻量化llm项目完整走一遍对话模型的开发[Minimind](https://github.com/jingyaogong/minimind)。
