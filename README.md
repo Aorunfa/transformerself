@@ -28,7 +28,6 @@
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 推荐根据轻量化llm项目完整走一遍对话模型的开发[Minimind](https://github.com/jingyaogong/minimind)。
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 > 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batch_size设置为1可以吃得消。
 
