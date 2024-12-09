@@ -124,7 +124,7 @@
 * practice: 见到`四minimind项目`。   
   
 ## Bert
-* introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类...)，序列标注（词性分类 邮寄地址信息提取, 语义相似度，多选问答，抽取问答...
+* introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类...)，序列标注（词性分类 邮寄地址信息提取, 语义相似度，多选问答，抽取问答...。对于bert的解读可以参考[链接](https://github.com/datawhalechina/learn-nlp-with-transformers)
 
 * prtrained: 采用mask language和相邻句子判断进行预训练。  
   > * mask language随机遮掩token(15%)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；
@@ -167,7 +167,7 @@
 
 * rmsnorm是layernorm的改良版，去掉了去中心化的计算过程，提高了计算效率，只有一个可学习参数即rescale参数。
 
-* batchnorm适用于卷积结构，训练时batchsize大均值与方差具备代表性。layernorm适transform、rnn结构，训练时batchsize小但是feature维度高；另一方面，图像数据是客观存在的表示，对每个sample的channel特征进行归一化具有实际意义。而自然语言的表示是人为假设，通过embeding转换为数字表示，对每个sample特征维度进行归一化缺少实际意义。
+* batchnorm适用于卷积结构，训练时batchsize大均值与方差具备代表性。layernorm适transform、rnn结构，训练时batchsize小但是feature维度高；另一方面，图像数据是客观存在的表示，对每个sample的channel特征进行归一化具有实际意义。而自然语言的表示是人为构造的，通过embeding转换为数字表示，客观上并不存在，对每个sample特征维度进行归一化缺少实际意义。
   
 ### 2. sin-cos pos embedding vs ROPE vs 可学习的位置编码
 
