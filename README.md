@@ -127,10 +127,14 @@
 * introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类...)，序列标注（词性分类 邮寄地址信息提取, 语义相似度，多选问答，抽取问答...
 
 * prtrained: 采用mask language和相邻句子判断进行预训练。  
-  > mask language随机遮掩token(15%)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；  
+  > mask language随机遮掩token(15%)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；
+   
   > 相邻句子判断，输入为句子+分隔标记+相邻句子，通过CLS位置的输出进行分类监督。这个训练步骤在后续的研究中逐渐淡化。  
+  
   > 特殊输入标记包括，类别标记`[CLS]`，句子分隔标记`[SEP]`，遮掩token标记`[MASK]`。`[CLS]`标记标记主要表征句子的整体语义，主要作为分类输出头的输入。  
+  
   > embedding由三类向量相加：`token emb + segment emb + pos emb`，都是可学习参数，形状分别为` `
+  
   > padding mask区分实际token和padding token，用于在softmax中归零padding token的权值  
 
 * finetune: 以bert作为backbone增加输出网络，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果  
