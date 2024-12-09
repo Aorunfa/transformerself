@@ -1,2 +1,5 @@
 /minimind/minimind-v1-small
 /minimind/dataset
+/Bert-Chinese-Text-Classification-Pytorch/seqlabel/saved_dict
+/Bert-Chinese-Text-Classification-Pytorch/bert_pretrain/pytorch_model.bin
+/Bert-Chinese-Text-Classification-Pytorch/THUCNews/saved_dict
