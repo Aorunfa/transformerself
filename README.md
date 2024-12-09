@@ -18,11 +18,14 @@
 **论文链接[attendion all you need](https://arxiv.org/abs/1706.03762)**，论文模型结构为encoder-decoder的结构，两个组件的经典模型见第六节。
 
 # 三. transformer 论文代码解读
-  首先根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及这类代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的ouput head是一个单独的线性层，与embeding层不共享权重
+  首先根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的`ouput head`是一个单独的线性层，与embeding层不共享权重。
 
-# 四. llm模型训练流程及方法 -- 完整训练一个GPT decoder-only的问答模型
-  推荐根据轻量化llm项目完整走一遍对话llm模型的开发[Minimind](https://github.com/jingyaogong/minimind), 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batchsize设置为1可以吃得消   
-## 4.1 pretrained
+# 四. llm模型训练流程及方法 - 完整训练一个GPT decoder-only的问答模型
+  推荐根据轻量化llm项目完整走一遍对话模型的开发[Minimind](https://github.com/jingyaogong/minimind)。
+  
+  **只要求跑通进行代码阅读的情况下，4Gb显存的卡将batch_size设置为1可以吃得消。**
+  
+* 4.1 pretrained
   01 prtrained的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字输出符合逻辑的话一段话，简而言之就是字接龙  
   02 prtrained的输入是```input_ids[:-1]```， 标签是```input_ids[1:]```，input_ids是指文字经过tokenize后的idlist，如```我爱你 --> <s>我爱你<\s> --> [1, 2, 23, 4, 2]```，之所以输入与标签要错一位，目的在于实现预测下一个token的监督学习，例如输入文字是”我爱你啊“， 那么预测下一个token逻辑是```我 --> 我爱; 我爱 --> 我爱你；我爱你 --> 我爱你啊```， 使用mask能对信息进遮掩，实现并行训练，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的```ouput[0]```则由```<s>我```预测得到  
   03 prtrained的损失函数为corss_entropy，模型输出的logits维度为(batch_size, max_seq_length, voc_size), max_seq_length为文字对齐到的最大长度，voc_size为词表的token数量。损失计算的逻辑为对logits沿最后的轴进行softmax得到几率，形状不变；沿着max_seq_length取出label对应的token_id计算corss_entropy；由于label的真实长度不一定为max_seq_length，需要设置一个真实token_id的掩码就行过滤  
