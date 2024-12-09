@@ -15,7 +15,7 @@
 * 训练阶段，对比rnn, transformer能够做到训练的并行，即输出一次性包含了所有next token的， 得力于attention mask的设计, 模拟信息串行
 * 预测阶段，与rnn相同，transformer自回归预测下一个token，当出现终止符则停止
   
-**论文链接[attendion all you need](https://arxiv.org/abs/1706.03762)**，论文模型结构为encoder-decoder的结构 
+**论文链接[attendion all you need](https://arxiv.org/abs/1706.03762)**，论文模型结构为encoder-decoder的结构，两个组件的经典模型代表见六
 
 # 三. transformer 论文代码解读
   首先根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及这类代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的ouput head是一个单独的线性层，与embeding层不共享权重
