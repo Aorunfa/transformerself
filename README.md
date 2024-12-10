@@ -127,7 +127,7 @@
 * introduce: encoder only结构，self attendtion保证每个token可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类, 多选问答，抽取问答...)，序列标注（词性标注 邮寄地址信息提取), 语义相似度...。对于bert的解读可以参考[链接](https://github.com/datawhalechina/learn-nlp-with-transformers)
 
 * prtrained: 采用mask language和相邻句子判断进行预训练。  
-  > * mask language随机遮掩token(15%)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；
+  > * mask language随机遮掩token(15%, 其中10%被随机替换为其他token)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；
    
   > * 相邻句子判断，输入为句子+分隔标记+相邻句子，通过CLS位置的输出进行分类监督。这个训练步骤在后续的研究中逐渐淡化。  
   
@@ -143,10 +143,10 @@
   > 在本仓库中增加地址文本的序列标注代码，见`/Bert-Chinese-Text-Classification-Pytorch/seqlabel/train.py` 
   
 ## T5 encoder-decoder 集大成者
-* introduce: encoder-decoder结构，适用于所有的NLP任务包括序列标注、文本分类、摘要生成、问答。[论文地址](https://arxiv.org/abs/1910.10683)
-  > Teacher Forcing的训练策略
+* introduce: encoder-decoder结构，适用于所有的NLP任务包括序列标注、文本分类、机器翻译、摘要生成、问答。[论文地址](https://arxiv.org/abs/1910.10683)
+  > Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。
   > text2text框架适应
-  > 位置编码
+  > 相对位置编码
   > Teacher Forcing的训练策略
 
 * pretreined：训练方法选择 mask and mask ratio，prefix的text2text方法
