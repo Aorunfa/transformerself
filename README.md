@@ -150,12 +150,14 @@
 
 
 * pretreined：训练方法选择 mask and mask ratio，prefix的text2text方法
-  > 预训练方式：采用bert风格掩码语言模型的训练方式。对照：自回归式、文本打乱还原式
-  > 破坏方式：采用跨域mask，mask连续的token并唯一标记，target为唯一标记+mask内容+终止符号。对照：mask one，丢弃，替换
+  > 预训练方式：采用bert风格掩码语言模型的训练方式，预测mask的部分。对照：自回归式、文本打乱还原式
+  > 破坏方式：采用replace span，replace连续的token并打上唯一标记，target为`(唯一标记 + mask内容) * n + 终止符号`，可加速训练。对照：bert的mask方式，随机丢弃
   > 破坏比例：采用15%的破坏比例。
   > 遮掩长度：采用3的span长度。
-
-  > multi-task trainning：多任务数据联合训练
+  > multi-task trainning：
+  
+  > text2text输入输出定义
+  > Beam Search vs greedy decoding
   
 * finetune：prefix finetune
 
