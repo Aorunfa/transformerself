@@ -142,8 +142,8 @@
 * practice: [bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)，快速理解整个bert模型结构，微调数据的加载方式和训练过程。
   > 在本仓库中增加地址文本的序列标注代码，见`/Bert-Chinese-Text-Classification-Pytorch/seqlabel/train.py` 
   
-## T5 encoder-decoder 集成者
-* introduce: encoder-decoder结构，适用于所有的NLP任务包括序列标注、文本分类、摘要生成、问答。
+## T5 encoder-decoder 集大成者
+* introduce: encoder-decoder结构，适用于所有的NLP任务包括序列标注、文本分类、摘要生成、问答。[论文地址](https://arxiv.org/abs/1910.10683)
   > Teacher Forcing的训练策略
   > text2text框架适应
   > 位置编码
