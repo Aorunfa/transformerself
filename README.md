@@ -143,10 +143,16 @@
   > 在本仓库中增加地址文本的序列标注代码，见`/Bert-Chinese-Text-Classification-Pytorch/seqlabel/train.py` 
   
 ## T5 encoder-decoder 集成者
-* introduce: encoder-decoder结构， 优点， 适用于所有的NLP任务，Teacher Forcing的训练策略
-  结构选择，训练方法选择 mask and mask ratio，prefix的text2text方法
+* introduce: encoder-decoder结构，适用于所有的NLP任务包括序列标注、文本分类、摘要生成、问答。
+  > Teacher Forcing的训练策略
+  > text2text框架适应
+  > 位置编码
+  > Teacher Forcing的训练策略
 
-* pretreined：
+* pretreined：训练方法选择 mask and mask ratio，prefix的text2text方法
+  > mask continous 策略: 对比mask一个token, mask连续token, token乱序恢复三类破坏方法，mask连续token效果最佳
+  > mask 15%: 随机mask 15%的比例实验最佳效果
+  
 
 * finetune：
 
