@@ -133,7 +133,7 @@
   
   > * 特殊输入标记包括，类别标记`[CLS]`，句子分隔标记`[SEP]`，遮掩token标记`[MASK]`。`[CLS]`标记标记主要表征句子的整体语义，主要作为分类输出头的输入。  
   
-  > * embedding由三类向量相加：`token emb + segment emb + pos emb`，segment区分上句或下句，三者都是可学习参数，形状分别为`(voc_size, d_model), (2, d_model), (max_len, d_model)`。
+  > * embedding由三类向量相加：`embeddings = words_embeddings + position_embeddings + token_type_embeddings`，token_type区分上句或下句，三者都是可学习参数，形状分别为`(voc_size, d_model), (max_len, d_model), (2, d_model)`。相加的含义可以用one-hot编码就行解释，等同于`onehot[word-hot, pos-hot, type-hot] * [W_word, W_pos, W_type]`。
   
   > * padding mask区分实际token和padding token，用于在softmax中归零padding token的权值，例如一个token查到paddingtoken，计算得到的注意力权重应该为0。
 
@@ -143,7 +143,8 @@
   > 在本仓库中增加地址文本的序列标注代码，见`/Bert-Chinese-Text-Classification-Pytorch/seqlabel/train.py` 
   
 ## T5 encoder-decoder 集成者
-* introduce: encoder-decoder结构， 优点， 适用于所有的NLP任务，
+* introduce: encoder-decoder结构， 优点， 适用于所有的NLP任务，Teacher Forcing的训练策略
+  结构选择，训练方法选择 mask and mask ratio，prefix的text2text方法
 
 * pretreined：
 
