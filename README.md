@@ -142,21 +142,24 @@
 * practice: [bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)，快速理解整个bert模型结构，微调数据的加载方式和训练过程。
   > 在本仓库中增加地址文本的序列标注代码，见`/Bert-Chinese-Text-Classification-Pytorch/seqlabel/train.py` 
   
-## T5 encoder-decoder 集大成者
+## T5 encoder-decoder 集大成者，统一NLP任务
 * introduce: encoder-decoder结构，适用于所有的NLP任务包括序列标注、文本分类、机器翻译、摘要生成、问答。[论文地址](https://arxiv.org/abs/1910.10683)
-  > Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。
   > text2text框架适应
   > 相对位置编码
-  > Teacher Forcing的训练策略
+  > Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。
+
 
 * pretreined：训练方法选择 mask and mask ratio，prefix的text2text方法
-  > mask continous 策略: 对比mask一个token, mask连续token, token乱序恢复三类破坏方法，mask连续token效果最佳
-  > mask 15%: 随机mask 15%的比例实验最佳效果
+  > 预训练方式：采用bert风格掩码语言模型的训练方式。对照：自回归式、文本打乱还原式
+  > 破坏方式：采用跨域mask，mask连续的token并唯一标记，target为唯一标记+mask内容+终止符号。对照：mask one，丢弃，替换
+  > 破坏比例：采用15%的破坏比例。
+  > 遮掩长度：采用3的span长度。
+
+  > multi-task trainning：多任务数据联合训练
   
+* finetune：prefix finetune
 
-* finetune：
-
-* prectice：
+* practice：
 
 
 
