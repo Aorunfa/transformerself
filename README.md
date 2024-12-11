@@ -38,7 +38,7 @@
 
 * prtrained的输入是`input_ids[:-1]`， 标签是`input_ids[1:]`，input_ids是指文字经过tokenize后的id list，如`我爱你 --> <s>我爱你<\s> --> [1, 2, 23, 4, 2]`，之所以输入与标签要错一位，目的在于实现预测下一个token的监督学习，例如输入文字是”我爱你啊“， 那么预测下一个token逻辑是`我 --预测--> 我爱; 我爱 --> 我爱你；我爱你 --> 我爱你啊`， 使用mask能对信息进遮掩，实现并行训练，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的`ouput[0]`则由`<s>我`预测得到。
 
-* prtrained的损失函数为corss_entropy，模型输出的logits维度为`(batch_size, max_seq_length, voc_size)`, `max_seq_length`为文字对截长补短的最大长度，`voc_size`为词表的token数量。损失计算的逻辑为对logits沿最后的轴进行softmax得到几率，形状不变；沿着max_seq_length取出label对应的token_id计算corss_entropy；由于所有label的真实长度不一定为max_seq_length，需要设置一个真实token_id的mask就行过滤。
+* prtrained的损失函数为corss_entropy，模型输出的logits维度为`(batch_size, max_seq_length, voc_size)`, `max_seq_length`为对文本截长补短的最大长度，`voc_size`为词表的token数量。损失计算的逻辑为对logits沿最后的轴进行softmax得到几率，形状不变；沿着max_seq_length取出label对应的token_id计算corss_entropy；由于所有label的真实长度不一定为max_seq_length，需要设置一个真实token_id的mask就行过滤。
 
 ---
 
@@ -156,8 +156,8 @@
   > 遮掩长度：采用3的span长度。
   > multi-task trainning：
   
-  > text2text输入输出定义
-  > Beam Search vs greedy decoding
+  > text2text输入输出格式: 输入为`任务类型prefix + input; 目标prefix + target`
+  > greedy decoding vs beam search：两者适用于自回归场景。贪婪解码，每次选择概率最大的token作为下一个输入；波束搜索，每次选择top n的token依次作为输入，做树状裂变，最后选择总体评分最大的路径作为最优输出，一般用于翻译和摘要输出。
   
 * finetune：prefix finetune
 
