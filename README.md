@@ -147,8 +147,7 @@
 
   > 共享的相对位置编码：在attention的`qi * kj^T`计算得到的logits加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数。
   
-  > Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。可以理解为将input[:-1]作为输入，input[1:]作为标签的。
-
+  > Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。可以理解为将input[:-1]作为输入，input[1:]作为标签，t5的预训练应该数这种，**而不是bert输出与输入的位置对应**。
 
 * pretreined：训练方法选择 mask and mask ratio，prefix的text2text方法
   > 预训练方式：采用bert风格掩码语言模型的训练方式，预测mask的部分。对照：自回归式、文本打乱还原式
@@ -158,7 +157,7 @@
   > multi-task trainning：**无监督数据里面混入一定比例的有监督数据**，有监督数据的构造方式同finetune中text2text输入输出格式
   
 * finetune：prefix finetune
-  > text2text输入输出格式: 输入为`任务类型prefix + input; 目标prefix + target`
+  > text2text输入输出格式: 输入为`任务类型prefix + input; 目标prefix + target`，如翻译任务将输入`{'en': 'That is good', 'ge': 'Das ist gut'}`转换为`{'input': 'translate English to German: That is good', 'target': 'Das ist gut'}`最终合并为prefix标注输入`translate English to German: That is good。target: Das ist gut`。
 
 * practice：
   > greedy decoding vs beam search：两者适用于自回归场景。贪婪解码，每次选择概率最大的token作为下一个输入；波束搜索，每次选择top n的token依次作为输入，做树状裂变，最后选择总体评分最大的路径作为最优输出，一般用于翻译和摘要输出。
