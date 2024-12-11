@@ -112,7 +112,7 @@
 
 ---
 
-# 六. 进阶1-经典transformer结构介绍
+# 六. 经典transformer结构介绍
 
 ## GPT 
 * introduce: decoder only结构，通过mask self-attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如：问答，机器翻译，摘要生成，音乐生成等。
@@ -143,10 +143,9 @@
   > 在本仓库中增加地址文本的序列标注代码，见`/Bert-Chinese-Text-Classification-Pytorch/seqlabel/train.py` 
   
 ## T5 encoder-decoder 集大成者，统一NLP任务
-* introduce: encoder-decoder结构，适用于所有的NLP任务包括序列标注、文本分类、机器翻译、摘要生成、问答。[论文地址](https://arxiv.org/abs/1910.10683)[解读](https://zhuanlan.zhihu.com/p/89719631)
+* introduce: encoder-decoder结构，统一的text-to-text框架，适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[解读](https://zhuanlan.zhihu.com/p/89719631)
 
   > 共享的相对位置编码：在attention的`qi * kj^T`计算得到的logits加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数。
-  
   > Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。可以理解为将input[:-1]作为输入，input[1:]作为标签，t5的预训练应该数这种，**而不是bert输出与输入的位置对应**。
 
 * pretreined：训练方法选择 mask and mask ratio，prefix的text2text方法
@@ -154,14 +153,16 @@
   > 破坏方式：采用replace span，replace连续的token并打上唯一标记，target为`(唯一标记 + mask内容) * n + 终止符号`，可加速训练。对照：bert的mask方式，随机丢弃
   > 破坏比例：采用15%的破坏比例。
   > 遮掩长度：采用3的span长度。
-  > multi-task trainning：**无监督数据里面混入一定比例的有监督数据**，有监督数据的构造方式同finetune中text2text输入输出格式
+  > 多任务加微调策略：**无监督数据里面混入一定比例的多任务的有监督数据**，有监督数据的构造方式同finetune中text2text输入输出格式。与加入多任务数据数据预训练差不多，但最后采用的原因是可以监督下游多任务的性能。
   
-* finetune：prefix finetune + 方法
+* finetune：全量，逐步解冻，adapter
   > text2text输入输出格式: 输入为`任务类型prefix + input; 目标prefix + target`，如翻译任务将输入`{'en': 'That is good', 'ge': 'Das ist gut'}`转换为`{'input': 'translate English to German: That is good', 'target': 'Das ist gut'}`最终合并为prefix标注输入`translate English to German: That is good。target: Das ist gut`。对于其他任务的转换形式见论文附录D。
-  > 方法
+  > 还是全量微调更胜一筹，逐步解冻次之
 
 * practice：[NLP2SQL]()
-  > greedy decoding vs beam search：两者适用于自回归场景。贪婪解码，每次选择概率最大的token作为下一个输入；波束搜索，每次选择top n的token依次作为输入，做树状裂变，最后选择总体评分最大的路径作为最优输出，一般用于翻译和摘要输出。
+  > greedy decoding vs beam search：两者适用于自回归场景。
+  > 贪婪解码，每次选择概率最大的token作为下一个输入。
+  > 波束搜索，每次选择top n的token依次作为输入，做树状裂变，最后选择总体评分最大的路径作为最优输出，一般用于翻译和摘要输出。
 
 
 
