@@ -145,7 +145,7 @@
 ## T5 encoder-decoder 集大成者，统一NLP任务
 * introduce: encoder-decoder结构，统一的text-to-text框架，适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[解读](https://zhuanlan.zhihu.com/p/89719631)
 
-  > 共享的相对位置编码：在attention的`qi * kj^T`计算得到的logits加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数。
+  > 共享的相对位置编码：在attention的`qi * kj^T`计算得到的logits加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数。[详解](https://blog.csdn.net/qq_44665283/article/details/140526203)
   > Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。可以理解为将input[:-1]作为输入，input[1:]作为标签，t5的预训练应该数这种，**而不是bert输出与输入的位置对应**。
 
 * pretreined：训练方法选择 mask and mask ratio，prefix的text2text方法
