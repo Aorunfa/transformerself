@@ -159,7 +159,7 @@
   > text2text输入输出格式: 输入为`任务类型prefix + input; 目标prefix + target`，如翻译任务将输入`{'en': 'That is good', 'ge': 'Das ist gut'}`转换为`{'input': 'translate English to German: That is good', 'target': 'Das ist gut'}`最终合并为prefix标注输入`translate English to German: That is good。target: Das ist gut`。对于其他任务的转换形式见论文附录D。
   > 还是全量微调更胜一筹，逐步解冻次之
 
-* practice：[NLP2SQL]()
+* practice：中文文本摘要总结实战，见目录`/T5-pegasus-chinese`
   > greedy decoding vs beam search：两者适用于自回归场景。
   > 贪婪解码，每次选择概率最大的token作为下一个输入。
   > 波束搜索，每次选择top n的token依次作为输入，做树状裂变，最后选择总体评分最大的路径作为最优输出，一般用于翻译和摘要输出。
