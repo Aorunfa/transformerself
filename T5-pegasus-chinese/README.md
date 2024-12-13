@@ -4,7 +4,7 @@
 # 环境安装
 ```bash
 cd T5-pegasus-chinese
-pip install -r requirement.txt
+pip install -r requirements.txt
 ```
 
 # 下载预训练模型
@@ -27,7 +27,12 @@ pip install -r requirement.txt
 
 
 # 微调
-
-
+单卡微调，需求至少6GB显存
+```python
+python ./train.py
+```
 
 # 推理 
+```python
+python ./infer.py
+```
