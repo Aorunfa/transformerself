@@ -3,3 +3,6 @@
 /Bert-Chinese-Text-Classification-Pytorch/seqlabel/saved_dict
 /Bert-Chinese-Text-Classification-Pytorch/bert_pretrain/pytorch_model.bin
 /Bert-Chinese-Text-Classification-Pytorch/THUCNews/saved_dict
+/T5-pegasus-chinese/data
+/T5-pegasus-chinese/pretrained_model
+/T5-pegasus-chinese/__pycache__

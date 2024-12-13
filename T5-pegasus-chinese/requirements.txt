@@ -1,0 +1,6 @@
+accelerate==1.0.1
+huggingface-hub==0.26.1
+numpy==1.26.4
+torch==2.4.0
+tqdm==4.66.5
+transformers==4.44.0
