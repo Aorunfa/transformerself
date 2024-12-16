@@ -168,7 +168,21 @@
 
 ---
 
-# 七. 模型压缩
+# 七. 多模态经典应用 - CLIP
+CLIP完成的任务，达成效果，总体思路。
+
+## ViT图片编码
+* 将图片依次划分多个patch(小方格)，提取每个patch特征作为一个token，再送入transform中提取特征。例如将224×224图片，以32×32patch大小，可以划分7×7个方格，对每个放个提取d_model维的一维特征向量，可以得到一个token矩阵，形状为`(7×7, d_model)`，和文字的输入相同。
+* CLIP实现ViT，以224×224特征、32×32patch为例
+  > 通过32×32大小，32步长，d_model输出channel的卷积完成patch划分和特征提取，得到形状为(49, d_model)的token_embeding矩阵
+  > 在的token_embeding矩阵的首行嵌入一行CLS向量，用于表征整个图片的特征，向量参数为可学习参数，token_embeding形状为(50, d_model)
+  > position embeding采用可学习参数
+  > 最后提取CLS对应的特征向量，表示图片的分类特征
+
+## 文本编码
+
+
+# 八. 模型压缩
 ## 蒸馏
 
 ## 量化
