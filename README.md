@@ -171,7 +171,7 @@
 这一章介绍Vit的经典应用，以及多模态的入门项目。
 
 ## CLIP
-CLIP完成的任务，达成效果，总体思路。 后续泛化工作 DALLE BLIP open-clip evaCLip
+CLIP完成的任务，达成效果，总体思路。 后续泛化工作 DALLE BLIP open-clip eva-cLip等
 CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程
 ### ViT图片编码器
 * 将图片依次划分多个patch(小方格)，提取每个patch特征作为一个token，再送入transform中提取特征。例如将224×224图片，以32×32的patch大小，可以划分7×7个方格，对每个方格提取out_dim维的一维特征向量，可以得到一个token矩阵，形状为`(7×7, output_dim)`，和文字的输入方式相同。
