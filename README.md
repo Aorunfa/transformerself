@@ -196,9 +196,17 @@ CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的
 
 ### 蒸馏训练
 
+## Sam2
+分割追踪。使用sam2的记忆组件进行物体追踪工作(samurai)[https://github.com/yangchris11/samurai]
+
+### 图片编码
+
+### 提示编码
+
+### 物体追踪
 
 ## minimind_v
-快速入门多模态基础，进阶可以学习Llava，QwenVL等
+图片问答基础， 使用clip的CLS输出作为图片embbeding，对齐文本和图片特征，输入语言模型，输出目标文本的预测。进阶可以学习Llava，QwenVL等模型
 ### 对齐图片token和文字token
 
 ### 预训练
