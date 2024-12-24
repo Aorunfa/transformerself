@@ -124,24 +124,24 @@
 ## T5 encoder-decoder 集大成者，统一NLP任务
 * introduce: encoder-decoder结构，统一的text-to-text框架，适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[解读](https://zhuanlan.zhihu.com/p/89719631)
 
-  > 共享的相对位置编码：在attention的`qi * kj^T`计算得到的logits加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数。[详解](https://blog.csdn.net/qq_44665283/article/details/140526203)
-  > Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。可以理解为将input[:-1]作为输入，input[1:]作为标签，t5的预训练属于这种，**而不是bert输出与输入的位置对应**。
+  > * 共享的相对位置编码：在attention的`qi * kj^T`计算得到的logits加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数。[详解](https://blog.csdn.net/qq_44665283/article/details/140526203)
+  > * Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。可以理解为将input[:-1]作为输入，input[1:]作为标签，t5的预训练属于这种，**而不是bert输出与输入的位置对应**。
 
 * pretreined：训练方法选择 mask and mask ratio，prefix的text2text方法
-  > 预训练方式：采用bert风格掩码语言模型的训练方式，预测mask的部分。对照：自回归式、文本打乱还原式
-  > 破坏方式：采用replace span，replace连续的token并打上唯一标记，target为`(唯一标记 + mask内容) * n + 终止符号`，可加速训练。对照：bert的mask方式，随机丢弃
-  > 破坏比例：采用15%的破坏比例。
-  > 遮掩长度：采用3的span长度。
-  > 多任务加微调策略：**无监督数据里面混入一定比例的多任务的有监督数据**，有监督数据的构造方式同finetune中text2text输入输出格式。与加入多任务数据数据预训练差不多，但最后采用的原因是可以监督下游多任务的性能。
+  > * 预训练方式：采用bert风格掩码语言模型的训练方式，预测mask的部分。对照：自回归式、文本打乱还原式
+  > * 破坏方式：采用replace span，replace连续的token并打上唯一标记，target为`(唯一标记 + mask内容) * n + 终止符号`，可加速训练。对照：bert的mask方式，随机丢弃
+  > * 破坏比例：采用15%的破坏比例。
+  > * 遮掩长度：采用3的span长度。
+  > * 多任务加微调策略：**无监督数据里面混入一定比例的多任务的有监督数据**，有监督数据的构造方式同finetune中text2text输入输出格式。与加入多任务数据数据预训练差不多，但最后采用的原因是可以监督下游多任务的性能。
   
 * finetune：全量，逐步解冻，adapter
-  > text2text输入输出格式: 输入为`任务类型prefix + input; 目标prefix + target`，如翻译任务将输入`{'en': 'That is good', 'ge': 'Das ist gut'}`转换为`{'input': 'translate English to German: That is good', 'target': 'Das ist gut'}`最终合并为prefix标注输入`translate English to German: That is good。target: Das ist gut`。对于其他任务的转换形式见论文附录D。
-  > 还是全量微调更胜一筹，逐步解冻次之
+  > * text2text输入输出格式: 输入为`任务类型prefix + input; 目标prefix + target`，如翻译任务将输入`{'en': 'That is good', 'ge': 'Das ist gut'}`转换为`{'input': 'translate English to German: That is good', 'target': 'Das ist gut'}`最终合并为prefix标注输入`translate English to German: That is good。target: Das ist gut`。对于其他任务的转换形式见论文附录D。
+  > * 还是全量微调更胜一筹，逐步解冻次之
 
 * practice：中文文本摘要总结实战，见目录`/T5-pegasus-chinese`
-  > greedy decoding vs beam search：两者适用于自回归场景。
-  > 贪婪解码，每次选择概率最大的token作为下一个输入。
-  > 波束搜索，每次选择top n的token依次作为输入，做树状裂变，最后选择总体评分最大的路径作为最优输出，一般用于翻译和摘要输出。 --- todo comfirm
+  > * greedy decoding vs beam search：两者适用于自回归场景。
+  > * 贪婪解码，每次选择概率最大的token作为下一个输入。
+  > * 波束搜索，每次选择top n的token依次作为输入，做树状裂变，最后选择总体评分最大的路径作为最优输出，一般用于翻译和摘要输出。 --- todo comfirm
 
 
 ---
@@ -156,10 +156,10 @@ CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的
 ### ViT图片编码器
 * 将图片依次划分多个patch(小方格)，提取每个patch特征作为一个token，再送入transform中提取特征。例如将224×224图片，以32×32的patch大小，可以划分7×7个方格，对每个方格提取out_dim维的一维特征向量，可以得到一个token矩阵，形状为`(7×7, output_dim)`，和文字的输入方式相同。
 * CLIP实现ViT，以224×224特征、32×32patch为例
-  > 通过32×32大小，32步长，d_model输出channel的卷积完成patch划分和特征提取，得到形状为(49, d_model)的token_embeding矩阵
-  > 在的token_embeding矩阵的首行嵌入一行CLS向量，用于表征整个图片的特征，向量参数为可学习参数，token_embeding形状为(50, d_model)
-  > position embeding采用可学习参数
-  > 最后提取CLS向量对应的特征向量，通过一个前馈网络将特征维度对齐的到文字的特征维度`nn.Linear(oupt_dim, d_model), d_model for text`表示图片的分类特征
+  > * 通过32×32大小，32步长，d_model输出channel的卷积完成patch划分和特征提取，得到形状为(49, d_model)的token_embeding矩阵
+  > * 在的token_embeding矩阵的首行嵌入一行CLS向量，用于表征整个图片的特征，向量参数为可学习参数，token_embeding形状为(50, d_model)
+  > * position embeding采用可学习参数
+  > * 最后提取CLS向量对应的特征向量，通过一个前馈网络将特征维度对齐的到文字的特征维度`nn.Linear(oupt_dim, d_model), d_model for text`表示图片的分类特征
 
 ### 文本编码器
 * 对文本最后添加一个结束符=，使用因果mask的注意力机制，经过transform后取结束符对应的编码作为文本特征，类似于bert CLS对应的特征
@@ -186,20 +186,20 @@ CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的
 ### hiera 特征提取器
 * 一个有效的图像、视频特征提取器，只使用简单的vit结构
 * 结构设计总体思路
-  > 浅层layer使用高分辨率和小特征维度，深层特征使用低分辨率和大特征维度
-  > 使用maxpool进行特征图下采样
-  > 前两阶段使用局部注意力机制（mask unit window），后两个阶段使用全局注意力机制
+  > * 浅层layer使用高分辨率和小特征维度，深层特征使用低分辨率和大特征维度
+  > * 使用maxpool进行特征图下采样
+  > * 前两阶段使用局部注意力机制（mask unit window），后两个阶段使用全局注意力机制
 * 预训练: 使用mask-auto-encoder的自监督训练方式，让模型理解图片/视频全局信息
 * 微调: 连接一个简单输出头作为decoder
   
 ### MAE 训练方式
 * mask生成: 计算遮掩给定大小连续patch的方阵(mask_unit)后得到的特征图分辨率，基于该分辨率随机mask给定比例的点，保证batch内的每一个图mask的比例相同
 * 损失计算
-  > encoder得到没有被mask掉的patch特征
-  > 恢复到原来的patch排列顺序，mask区域填充可学习参数，非mask区域使用encoder得到的特征
-  > 送入vit decoder得到最后的pred
-  > 标签计算，对原始图片按照最终的下采样stride分块，块状内的channel展平，对齐pred的特征空间维度。筛选出被mask掉的区域
-  > 使用均方误差计算pred和label的差异
+  > * encoder得到没有被mask掉的patch特征
+  > * 恢复到原来的patch排列顺序，mask区域填充可学习参数，非mask区域使用encoder得到的特征
+  > * 送入vit decoder得到最后的pred
+  > * 标签计算，对原始图片按照最终的下采样stride分块，块状内的channel展平，对齐pred的特征空间维度。筛选出被mask掉的区域
+  > * 使用均方误差计算pred和label的差异
 
 
 ## Sam2
