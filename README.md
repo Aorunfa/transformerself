@@ -180,9 +180,26 @@ CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的
 教师模型与学生模型相同，教师模型对global crop进行编码，学生模型对global和local crop进行编码，学生模型所有的输出分别与教师模型的global输出对齐。
 教师模型的参数通过ema加权学生模型的参数与历史参数，提高训练稳定性
 
-## hiera
-视觉自监督+下游任务微调，自监督主要使用MAE预训练方法，微调主要在hiera的encoder基础上增加一个任务头。
-用途。。。官方预训练主要用于imgnet1k分类和k-400的任务动作分类。（repo）[https://github.com/facebookresearch/hiera]
+## Hiera
+视觉自监督+下游任务微调，自监督主要使用MAE预训练方法，微调主要在hiera特征提取器基础上增加一个任务头。官方预训练主要用于imgnet1k分类和k-400视频动作的分类 (repo)[https://github.com/facebookresearch/hiera]。**MAE训练脚本和任务微调脚本可以参考本项目`/hiera`**
+### hiera 特征提取器
+* 一个有效的图像、视频特征提取器，只使用简单的vit结构
+* 结构设计总体思路
+  > 浅层layer使用高分辨率和小特征维度，深层特征使用低分辨率和大特征维度
+  > 使用maxpool进行特征图下采样
+  > 前两阶段使用局部注意力机制（mask unit window），后两个阶段使用全局注意力机制
+* 预训练: 使用mask-auto-encoder的自监督训练方式，让模型理解图片/视频全局信息
+* 微调: 连接一个简单输出头作为decoder
+  
+### MAE 训练方式
+* mask生成: 计算遮掩给定大小连续patch的方阵(mask_unit)后得到的特征图分辨率，基于该分辨率随机mask给定比例的点，保证batch内的每一个图mask的比例相同
+* 损失计算
+  > encoder得到没有被mask掉的patch特征
+  > 恢复到原来的patch排列顺序，mask区域填充可学习参数，非mask区域使用encoder得到的特征
+  > 送入vit decoder得到最后的pred
+  > 标签计算，对原始图片按照最终的下采样stride分块，块状内的channel展平，对齐pred的特征空间维度。筛选出被mask掉的区域
+  > 使用均方误差计算pred和label的差异
+
 
 ## Sam2
 分割追踪。使用sam2的记忆组件进行物体追踪工作(samurai)[https://github.com/yangchris11/samurai]
