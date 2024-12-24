@@ -181,7 +181,8 @@ CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的
 教师模型的参数通过ema加权学生模型的参数与历史参数，提高训练稳定性
 
 ## Hiera
-视觉自监督+下游任务微调，自监督主要使用MAE预训练方法，微调主要在hiera特征提取器基础上增加一个任务头。官方预训练主要用于imgnet1k分类和k-400视频动作的分类 (repo)[https://github.com/facebookresearch/hiera]。**MAE训练脚本和任务微调脚本可以参考本项目`/hiera`**
+视觉自监督+下游任务微调，自监督主要使用MAE预训练方法，微调主要在hiera特征提取器基础上增加一个任务头。官方预训练主要用于imgnet1k分类和k-400视频动作的分类[repo](https://github.com/facebookresearch/hiera)。  
+**MAE训练脚本和任务微调脚本可以参考本项目`/hiera`**
 ### hiera 特征提取器
 * 一个有效的图像、视频特征提取器，只使用简单的vit结构
 * 结构设计总体思路
