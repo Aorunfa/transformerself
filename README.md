@@ -147,7 +147,7 @@
 ---
 
 # 五. 经典视觉transformer
-这一章介绍Vit的经典应用，以及多模态的入门项目。
+这一章介绍tranformer在视觉领域的经典应用，以及多模态的入门项目，能够快速上手新的视觉项目。
 
 ## CLIP
 CLIP完成的任务，达成效果，总体思路。 后续泛化工作 DALLE BLIP open-clip eva-cLip等。
