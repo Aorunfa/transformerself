@@ -1,7 +1,7 @@
 # 一. 介绍
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-一个用于transformer nlp模型学习的仓库，梳理模型原理，训练步骤，微调方法及原理， 分享能快速理解并上手的代码实战项目
+**该项目还在持续更新，有空写一点** 一个用于transformer nlp模型学习的仓库，梳理模型原理，训练步骤，微调方法及原理， 分享能快速理解并上手的代码实战项目
 
 # 二. transformer 论文原理
 首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下要点
@@ -146,7 +146,7 @@
 
 ---
 
-# 五. 经典视觉transformer
+# 五. 进阶-经典视觉transformer
 这一章介绍tranformer在视觉领域的经典应用，以及多模态的入门项目，能够快速上手新的视觉项目。
 
 ## CLIP
@@ -170,6 +170,8 @@ CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的
 * 提取图文pairs特征
 * 所有图特征与文特征两两组合 计算相似度 similar(text[i]image[j]) = similar(TI[i][j])
 * 损失目标：最大化配对的图文相似度，最小化非配对的图文相似度
+
+## BLIP
 
 ## Dino
 视觉自监督训练的经典之作，完成的任务，达成效果，总体思路。 后续泛化工作 grounding dino
@@ -212,13 +214,6 @@ CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的
 ### 记忆编码
 
 ### 物体追踪
-
-
-## minimind_v
-图片问答基础， 使用clip的CLS输出作为图片embbeding，对齐文本和图片特征，输入语言模型，输出目标文本的预测。进阶可以学习Llava，QwenVL等模型
-### 对齐图片token和文字token
-
-### 预训练
 
 
 ---
