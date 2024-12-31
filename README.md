@@ -6,7 +6,7 @@
 # 二. transformer 论文原理
 首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下要点
 
-* 注意力机制: `q*K^T`做一次向量化查询，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, sqrt(d_model)用于softmax缩放，将梯度集中在明显变化区域。每一次查询看一次key表，生成新的val特征，特征优化方向与loss下降方向一致。  
+* 注意力机制: `q*K^T`做一次向量化查询，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, sqrt(d_model)用于softmax缩放，将梯度集中在明显变化区域。每一次查询看一次key表，生成新的val特征，特征优化方向与loss下降方向一致。可以理解为基于q进行特征挖掘，查询信息可以是自身相关或者其他来源。   
 * 多头注意力设计: 折叠分组查询，使用更少的参数量，进行更多特征空间的交互。
 * 注意力mask: 在seq_length维度保证当前查询只能看到自己以及之前的信息，模拟rnn的串行输出，在decoder中mask cross attention出现。
 * 可训参数矩阵`Wq Wk Wv Wo` 实现类似自动化特征工程的效果，如对一个查询向量q计算`q * Wk^T`可以得到新的查询，查询优化方向和loss下降方向一致，torch中以nn.Linear
