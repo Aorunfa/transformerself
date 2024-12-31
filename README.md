@@ -1,7 +1,8 @@
+## **Note 该项目还在持续更新，有空写一点**
 # 一. 介绍
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-**该项目还在持续更新，有空写一点** 一个用于transformer nlp模型学习的仓库，梳理模型原理，训练步骤，微调方法及原理， 分享能快速理解并上手的代码实战项目
+一个用于transformer nlp模型学习的仓库，梳理模型原理，训练步骤，微调方法及原理， 分享能快速理解并上手的代码实战项目
 
 # 二. transformer 论文原理
 首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下要点
