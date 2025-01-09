@@ -84,7 +84,7 @@ def train(model: MengziBase, config: train_config, train_loader, test_loader):
             else:
                 scheduler.step()
             
-            optimizer.zero_grad()
+            # optimizer.zero_grad()
             
             loss = model(inputs, labels)    # cross entropy
             
