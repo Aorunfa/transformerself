@@ -1,10 +1,10 @@
 ## **Note 该项目还在持续更新，有空写一点，如果你想加入这个项目 请联系我**
 # 一. 介绍
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 * 一个用于学习基于transformer的nlp和vit模型的仓库，梳理模型原理，训练步骤，微调方法等
 * 分享能快速理解并上手的代码实战项目（或推荐、或开发）
-* 适用于想要快速入门transform、能够阅读代码并二次开发的同学
+* 适用于具备一定torch基础、想要快速入门transform、能够阅读代码并二次开发的同学
+
 
 # 二. transformer 论文原理
 首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下要点
@@ -131,7 +131,6 @@ dpo从rlhf总体优化目标的三个原则出发```模型输出尽可能接近�
 
 ----
   
-  
 ## Bert
 * 介绍: encoder-only结构，只包含transform encoder部分。self-attendtion保证每个tokend都可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类, 多选问答，抽取问答...)，序列标注（词性标注 邮寄地址信息提取）, 语义相似度... 对于bert的解读可以参考[链接](https://github.com/datawhalechina/learn-nlp-with-transformers)
 
@@ -212,18 +211,45 @@ CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的
 Clip官方repo没有开源训练代码，不太好理解算法实现的具体细节，为此我结合[open_clip](https://github.com/mlfoundations/open_clip)，写了一版clip训练代码，可以参照[clip_finetune](https://github.com/Aorunfa/clip_finetune)，只需要少量数据和资源进行快速复现
 
 
-## Dino 自监督蒸馏
+## Dinov2 自监督蒸馏
 视觉自监督训练的经典之作，完成的任务，达成效果，总体思路。 
 用途。。。
 
+[dinov2](https://github.com/facebookresearch/dinov2)
 
 通过监督模型使用局部的特征信息预测整体的特征信息，促使模型理解图片的物体空间分布信息，达到自监督的效果
 
-### 蒸馏训练
-教师模型与学生模型相同，教师模型对global crop进行编码，学生模型对global和local crop进行编码，学生模型所有的输出分别与教师模型的global输出对齐。
-教师模型的参数通过ema加权学生模型的参数与历史参数，提高训练稳定性
-
 后续泛化工作 grounding-dinov2
+
+
+<div align="center">
+  <img src="doc/dino_alg.png" alt="dino" width="470" height="172">
+  <p style="font-size: 10px; color: gray;">dino思路(搬运自DINO)</p>
+</div>
+
+#### vit结构
+* patch embeding: 卷积实现投影矩阵
+* pos embedding: 使用可学习参数相加，分为cls embedding和patch embedding，插值实现patch的延展
+* transformer block: 使用残差块的droppath方法
+
+#### 蒸馏学习
+* 教师模型与学生模型使用同一个模型结构。不同在于，教师模型输入global crop图片，学生模型输入local crop图片
+* 将教师模型与学生模型的输出特征进行对齐，促使学生模型能够通过局部了解整体的能力
+* 教师模型的参数通过ema加权学生模型的参数与历史参数，提高训练稳定性
+
+### 损失设计
+dinov2使用了多种损失
+* do_dino, 教师与学生模型的cls输出经可能相似，分为global对global、local对global  
+* do_ibot, 对于gloable， 学生模型随机mask一些patch，教师模型正常输入。对mask的学生模型patch输出与教师模型尽可能相似 
+* do_koleo, 促使批次在特征空间内更加均匀分布，只监督学生模型vit的cls输出 
+* SwAV：样本中心化方法， Sinkhorn-Knopp归一化。对教师模型的after输出进行batch的去中心化
+
+### 工程借鉴
+
+### 实战
+...pending
+01 使用dino进行图片的retrival，以图搜图 -- 手撕一个retrival代码
+02 手撕一版友好阅读的训练代码
 
 
 ## Hiera MAE自监督预训练
@@ -273,6 +299,8 @@ Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训�
 ---
 
 # 六. 模型压缩
+... pending
+
 ## 蒸馏
 
 ## 量化
@@ -282,6 +310,7 @@ Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训�
 ---
 
 # 附录
+这一部分主要增加一些延展知识
 
 ## RNN补充
 在transformer出现后，在nlp的各任务中rnn逐渐被替代，但在一些结构化数据的时序预测仍广泛使用。
