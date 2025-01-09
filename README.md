@@ -1,4 +1,4 @@
-## **Note 该项目还在持续更新，有空写一点**
+## **Note 该项目还在持续更新，有空写一点，如果你想加入这个项目 请联系我**
 # 一. 介绍
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -183,73 +183,92 @@ dpo从rlhf总体优化目标的三个原则出发```模型输出尽可能接近�
 # 五. 进阶-经典视觉transformer
 这一章介绍tranformer在视觉领域的经典应用，能够快速上手新的视觉项目。
 
-## CLIP
-CLIP完成的任务，达成效果，总体思路。 后续泛化工作 DALLE BLIP open-clip eva-cLip等。
-用途提取图片的视觉编码特征
+## Clip 对比学习
+[clip](https://github.com/openai/CLIP)作为多模态的早期经典之作，主要通过对齐文本编码和图片编码，让模型能够匹配图片和给定文本，或匹配文本和给定的图片。主要适用视觉表征、文本到图片或图片到文本的匹配场景。特别地，clip预训练使用的大多是图片类别文本，我理解更适用以物体文本搜图。
 
-CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程
-### ViT图片编码器
-* 将图片依次划分多个patch(小方格)，提取每个patch特征作为一个token，再送入transform中提取特征。例如将224×224图片，以32×32的patch大小，可以划分7×7个方格，对每个方格提取out_dim维的一维特征向量，可以得到一个token矩阵，形状为`(7×7, output_dim)`，对前两个维度进行展平后和文字的输入方式相同。
-* CLIP实现ViT，以224×224特征、32×32patch为例
-  > * 通过32×32大小，32步长，d_model输出channel的卷积完成patch划分和特征提取，得到形状为(49, d_model)的token_embeding矩阵
-  > * 在的token_embeding矩阵的首行嵌入一行CLS向量，用于表征整个图片的特征，向量参数为可学习参数，token_embeding形状为(50, d_model)
+<div align="center">
+  <img src="doc/clip_alg.png" alt="clip" width="486" height="176">
+  <p style="font-size: 10px; color: gray;">clip思路(搬运自CLIP)</p>
+</div>
+
+#### 预训练总体思路：
+  * 文本编码器使用类似带casual-mask的transformer结构，对文本最后添加一个结束符`=`，使用因果mask的注意力机制，经过transform后取结束符对应的编码表征文本信息
+  * 图片编码器使用经典vit(和resnet)，通过卷积划分不重叠的patch，展平，在开头添加一个cls token对应的embedding, 再喂入带self-attention的transform，提取cls对应的嵌入向量表征图片信息
+  * 损失计算，对batch内的图片向量组和文本向量组，进行两两组合计算相似度，最大化数据集中对应的图片-文本的相似度
+
+clip实现vit，以224×224特征、32×32patch size为例:
+  > * 以32×32kernal大小，32stride，输出channel为3，输出channel为d_model的卷积核完成patch划分和特征提取，得到形状为(7,7, d_model)特征图，展平为(49, d_model)的token_embeding矩阵
+  > * 在的token_embeding矩阵的首行嵌入一行CLS向量，用于表征整个图片的特征，向量参数为可学习参数，token_embeding最后形状为(50, d_model)
   > * position embeding采用可学习参数
-  > * 最后提取CLS向量对应的特征向量，通过一个前馈网络将特征维度对齐的到文字的特征维度`nn.Linear(oupt_dim, d_model), d_model for text`表示图片的分类特征
+  > * 经过transform后提取CLS向量对应的特征向量，通过一个前馈网络将特征维度对齐的到文字的特征维度`nn.Linear(oupt_dim, d_model), d_model for text`表示图片的分类特征
 
-### 文本编码器
-* 对文本最后添加一个结束符=，使用因果mask的注意力机制，经过transform后取结束符对应的编码作为文本特征，类似于bert CLS对应的特征
+#### 一些后续泛化工作
+  * [Blip](https://github.com/salesforce/BLIP)，增加图片caption、qa能力
+  * [DALL-E](https://github.com/openai/DALL-E)，增加基于VAE的文本到图片的生成
+  * ...
 
-### 预训练
-训练目标是使得，配对的图片特征与文本特征要尽可能相似，不配对的要尽可能不相似。在足够大的图文pair数据集里面:
-* 抽取图文pairs组合，**根据label进行分层抽样
-* 提取图文pairs特征
-* 所有图特征与文特征两两组合 计算相似度 similar(text[i]image[j]) = similar(TI[i][j])
-* 损失目标：最大化配对的图文相似度，最小化非配对的图文相似度
+#### 实战
+CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程。
+Clip官方repo没有开源训练代码，不太好理解算法实现的具体细节，为此我结合[open_clip](https://github.com/mlfoundations/open_clip)，写了一版clip训练代码，可以参照[clip_finetune](https://github.com/Aorunfa/clip_finetune)，只需要少量数据和资源进行快速复现
 
-## BLIP
 
-## Dino
-视觉自监督训练的经典之作，完成的任务，达成效果，总体思路。 后续泛化工作 grounding dino
+## Dino 自监督蒸馏
+视觉自监督训练的经典之作，完成的任务，达成效果，总体思路。 
 用途。。。
+
+
 通过监督模型使用局部的特征信息预测整体的特征信息，促使模型理解图片的物体空间分布信息，达到自监督的效果
 
 ### 蒸馏训练
 教师模型与学生模型相同，教师模型对global crop进行编码，学生模型对global和local crop进行编码，学生模型所有的输出分别与教师模型的global输出对齐。
 教师模型的参数通过ema加权学生模型的参数与历史参数，提高训练稳定性
 
-## Hiera
-视觉自监督+下游任务微调，自监督主要使用MAE预训练方法，微调主要在hiera特征提取器基础上增加一个任务头。官方预训练主要用于imgnet1k分类和k-400视频动作的分类[repo](https://github.com/facebookresearch/hiera)，[解读](https://zhuanlan.zhihu.com/p/719060883)。  
-**MAE训练脚本和任务微调脚本可以参考本项目`/hiera`**
-### hiera 特征提取器
-* 一个有效的图像、视频特征提取器，只使用简单的vit结构
-* 结构设计总体思路
-  > * 浅层layer使用高分辨率和小特征维度，深层特征使用低分辨率和大特征维度
-  > * 使用maxpool进行特征图下采样
-  > * 前两阶段使用局部注意力机制（mask unit window），后两个阶段使用全局注意力机制
-* 预训练: 使用mask-auto-encoder的自监督训练方式，让模型理解图片/视频全局信息
-* 微调: 连接一个简单输出头作为decoder
+后续泛化工作 grounding-dinov2
+
+
+## Hiera MAE自监督预训练
+> 引子：之所以把hiera加进来，是由于其用到了MAE的高效自监督训练方法理解图片结构信息，同时sam2也以hiera作为高效特征提取器
+
+[hiera](https://github.com/facebookresearch/hiera)第一个特点是优化了传统vit结构在特征分辨率始终如一的特性，使用了池化的方式减小深层的特征的分辨率，提高了参数利用率(可以类比于经典高效卷积结构大多是多层级的分辨率特征图进行组合)，第二是采用了[mask-auto-encoder](https://github.com/facebookresearch/mae)的自监督方法进行预训练  
+hiera更轻量，微调下游任务效果更好，官方主要针对imgnet1k分类和k-400视频动作的分类进行了微调。论文解读可以参照[Hiera笔记](https://zhuanlan.zhihu.com/p/719060883)
+
+<div align="center">
+  <img src="doc/hiera_alg.png" alt="hiera" width="610" height="148">
+  <p style="font-size: 10px; color: gray;">hiera思路(搬运自Hiera)</p>
+</div>
+
+#### hiera 特征提取器
+  * 结构设计总体思路
+    > * 浅层layer使用高分辨率和小特征维度，深层特征使用低分辨率和大特征维度
+    > * 使用maxpool进行特征图下采样
+    > * 前两阶段使用局部注意力机制（mask unit window），后两个阶段使用全局注意力机制
   
-### MAE 训练方式
-* mask生成: 计算遮掩给定大小连续patch的方阵(mask_unit)后得到的特征图分辨率，基于该分辨率随机mask给定比例的点，保证batch内的每一个图mask的比例相同
+#### MAE 训练方式
+该方法主要是随机遮掩图片的patch窗口，将未遮掩的patch窗口拼接，送入encoder进行编码，再由decoder预测出被mask掉的patch窗口，mask的patch窗口的真值和预测值最后会由一个nn.Linear层将特征维度映射到超高维度，使用MSE损失度量分布差异
+* mask生成: 计算遮掩给定大小连续patch的方阵(mask_unit)后得到的特征图分辨率，基于该分辨率随机mask给定比例的点，保证batch内的每一个图mask的比例相同，才能进行min-batch training
 * 损失计算
-  > * encoder得到没有被mask掉的patch特征
-  > * 恢复到原来的patch排列顺序，mask区域填充可学习参数，非mask区域使用encoder得到的特征
-  > * 送入vit decoder得到最后的pred
-  > * 标签计算，对原始图片按照最终的下采样stride分块，块状内的channel展平，对齐pred的特征空间维度。筛选出被mask掉的区域
-  > * 使用均方误差计算pred和label的差异
+  * encoder得到没有被mask掉的patch特征
+  * 恢复到原来的patch排列顺序，mask区域填充可学习参数，非mask区域填充encoder得到的特征
+  * 送入vit decoder得到最后的pred
+  * 标签产生，对原始图片按照最终的下采样stride分块，块状内的channel展平，对齐pred的特征空间维度。筛选出被mask掉的区域
+  * 通过线性层间预测值与真值的特征维度映射到超高维度(65535), 使用均方误差计算pred和label的差异
+
+#### 实战
+Hiera的代码在maxpool的操作上极难读懂，但实战只需要知道函数功能即可
+Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训练代码，可以参照[hiera_finetune](https://github.com/Aorunfa/hiera_finetune)，同样只需要少量数据和资源进行快速复现
 
 
-## Sam2
-分割追踪。使用sam2的记忆组件进行物体追踪工作(samurai)[https://github.com/yangchris11/samurai]
+## Sam2 提示区域与记忆模块
+...pending 代码阅读工程量比较大。
+使用sam2的记忆组件进行物体追踪工作(samurai)[https://github.com/yangchris11/samurai]
 
-### 提示编码
+#### 提示编码
 
-### 图片编码
+#### 图片编码
 
-### 记忆编码
+#### 记忆编码
 
-### 物体追踪
-
+#### 物体追踪
 
 ---
 
