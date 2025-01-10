@@ -186,7 +186,7 @@ dpo从rlhf总体优化目标的三个原则出发```模型输出尽可能接近�
 [clip](https://github.com/openai/CLIP)作为多模态的早期经典之作，主要通过对齐文本编码和图片编码，让模型能够匹配图片和给定文本，或匹配文本和给定的图片。主要适用视觉表征、文本到图片或图片到文本的匹配场景。特别地，clip预训练使用的大多是图片类别文本，我理解更适用以物体文本搜图。
 
 <div align="center">
-  <img src="doc/clip_alg.png" alt="clip" width="486" height="176">
+  <img src="doc/clip_alg.png" alt="clip" width="606" height="220">
   <p style="font-size: 10px; color: gray;">clip思路(搬运自CLIP)</p>
 </div>
 
@@ -223,7 +223,7 @@ Clip官方repo没有开源训练代码，不太好理解算法实现的具体细
 
 
 <div align="center">
-  <img src="doc/dino_alg.png" alt="dino" width="470" height="172">
+  <img src="doc/dino_alg.png" alt="dino" width="586" height="214">
   <p style="font-size: 10px; color: gray;">dino思路(搬运自DINO)</p>
 </div>
 
@@ -259,7 +259,7 @@ dinov2使用了多种损失
 hiera更轻量，微调下游任务效果更好，官方主要针对imgnet1k分类和k-400视频动作的分类进行了微调。论文解读可以参照[Hiera笔记](https://zhuanlan.zhihu.com/p/719060883)
 
 <div align="center">
-  <img src="doc/hiera_alg.png" alt="hiera" width="610" height="148">
+  <img src="doc/hiera_alg.png" alt="hiera" width="760" height="186">
   <p style="font-size: 10px; color: gray;">hiera思路(搬运自Hiera)</p>
 </div>
 
