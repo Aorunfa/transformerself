@@ -10,7 +10,7 @@
 首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下要点
 
 <div align="center">
-  <img src="doc/transformer_arch.png" alt="论文模型结构" width="384" height="572">
+  <img src="doc/transformer_arch.png" alt="论文模型结构" width="384" height="548">
   <p style="font-size: 10px; color: gray;">经典transform</p>
 </div>
 
@@ -59,7 +59,7 @@
 > 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batch_size设置为1可以吃得消。
 
 <div align="center">
-  <img src="doc/minimind_arc.png" alt="minimind 结构" width="374" height="240">
+  <img src="doc/minimind_arc.png" alt="minimind 结构" width="560" height="360">
   <p style="font-size: 10px; color: gray;">minimind项目decoder-only结构</p>
 </div>
 
