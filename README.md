@@ -203,6 +203,7 @@ clip实现vit，以224×224特征、32×32patch size为例:
 
 #### 一些后续泛化工作
   * [Blip](https://github.com/salesforce/BLIP)，增加图片caption、qa能力
+  * [LLaVA](https://github.com/haotian-liu/LLaVA)，clip visudal enoder + llm，图片理解问答
   * [DALL-E](https://github.com/openai/DALL-E)，增加基于VAE的文本到图片的生成
   * ...
 
@@ -210,6 +211,17 @@ clip实现vit，以224×224特征、32×32patch size为例:
 CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程。
 Clip官方repo没有开源训练代码，不太好理解算法实现的具体细节，为此我结合[open_clip](https://github.com/mlfoundations/open_clip)，写了一版clip训练代码，可以参照[clip_finetune](https://github.com/Aorunfa/clip_finetune)，只需要少量数据和资源进行快速复现
 
+---
+
+## LLaVA
+...ongoing
+### 模型结构
+
+### 预训练
+
+### 实战
+
+---
 
 ## Dinov2 自监督蒸馏
 视觉自监督训练的经典之作，完成的任务，达成效果，总体思路。 
@@ -251,6 +263,8 @@ dinov2使用了多种损失
 01 使用dino进行图片的retrival，以图搜图 -- 手撕一个retrival代码
 02 手撕一版友好阅读的训练代码
 
+---
+
 
 ## Hiera MAE自监督预训练
 > 引子：之所以把hiera加进来，是由于其用到了MAE的高效自监督训练方法理解图片结构信息，同时sam2也以hiera作为高效特征提取器
@@ -283,6 +297,7 @@ hiera更轻量，微调下游任务效果更好，官方主要针对imgnet1k分�
 Hiera的代码在maxpool的操作上极难读懂，但实战只需要知道函数功能即可
 Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训练代码，可以参照[hiera_finetune](https://github.com/Aorunfa/hiera_finetune)，同样只需要少量数据和资源进行快速复现
 
+---
 
 ## Sam2 提示区域与记忆模块
 ...pending 代码阅读工程量比较大。
@@ -295,6 +310,16 @@ Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训�
 #### 记忆编码
 
 #### 物体追踪
+
+---
+
+## RTDETR
+...ongoing，实时检测，vit解决nms，对标yolo
+### 模型结构
+
+### 训练
+
+### 实战
 
 ---
 
