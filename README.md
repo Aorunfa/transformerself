@@ -203,23 +203,29 @@ clip实现vit，以224×224特征、32×32patch size为例:
 
 #### 一些后续泛化工作
   * [Blip](https://github.com/salesforce/BLIP)，增加图片caption、qa能力
-  * [LLaVA](https://github.com/haotian-liu/LLaVA)，clip visudal enoder + llm，图片理解问答
+  * [LLaVA](https://github.com/haotian-liu/LLaVA)，clip visual enoder + llm，图片理解问答
   * [DALL-E](https://github.com/openai/DALL-E)，增加基于VAE的文本到图片的生成
   * ...
 
 #### 实战
 CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程。
-Clip官方repo没有开源训练代码，不太好理解算法实现的具体细节，为此我结合[open_clip](https://github.com/mlfoundations/open_clip)，写了一版clip训练代码，可以参照[clip_finetune](https://github.com/Aorunfa/clip_finetune)，只需要少量数据和资源进行快速复现
+Clip官方repo没有开源训练代码，不太好理解算法实现的具体细节，为此我结合[open_clip](https://github.com/mlfoundations/open_clip)，写了一版clip训练代码，可以参照[clip_finetune](https://github.com/Aorunfa/clip_finetune)，只需要少量数据和资源进行快速复现，方便快速理解算法设计细节
 
 ---
 
 ## LLaVA
-...ongoing
-### 模型结构
+llava更新了三个版本，大体结构为使用clip vit结构的图片编码器得到提取patch embedding，通过一个mlp的投影层，将patch embedding的向量维度与llm 的token embedding的向量维度对齐。将image的特征替换进prompt input_ids的图片标志位，完成特征拼接，共同喂入llm。
+
+llava-1.6对提取patch embedding进行优化，将图片等分为四个区域，加一个中心裁剪得到五张图片，对每张图片都提取patch embeding后，按位置重新进行拼接，进一步提升了空间理解能力，涨点显著。
+
+具备clip和transformer的基础，对llava的代码比较容易理解，主要使用了transformer库的封装，调用clip特征提取器和llm的预训练模型，自定义了图片和text的处理过程，主要见`self.prepare_inputs_labels_for_multimodal`函数。
 
 ### 预训练
 
+
 ### 实战
+基于新的数据集，实现只对mlp的投影层进行训练，实现lora只微调特定参矩阵
+
 
 ---
 
