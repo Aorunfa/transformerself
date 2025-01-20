@@ -224,8 +224,9 @@ llava-1.6对提取patch embedding进行优化，将图片等分为四个区域�
 
 
 ### 实战
-基于新的数据集，lora只微调
-基于新的数据集，进行量化训练，qlora微调
+lora微调
+进行量化训练，qlora微调
+fsdp分布式数据并行训练方式
 
 ---
 
@@ -262,7 +263,7 @@ dinov2使用了多种损失
 * do_koleo, 促使批次在特征空间内更加均匀分布，只监督学生模型vit的cls输出 
 * SwAV：样本中心化方法， Sinkhorn-Knopp归一化。对教师模型的after输出进行batch的去中心化
 
-### 工程借鉴
+
 
 ### 实战
 ...pending
