@@ -11,10 +11,10 @@
 
 <div align="center">
   <img src="doc/transformer_arch.png" alt="论文模型结构" width="384" height="548">
-  <p style="font-size: 10px; color: gray;">经典transform</p>
+  <p style="font-size: 10px; color: gray;">经典transformer</p>
 </div>
 
-* 注意力机制: `q*K^T`做一次向量化查询，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, sqrt(d_model)用于softmax缩放，将梯度集中在明显变化区域。每一次查询匹配一次key表，生成新的val特征，特征优化方向与loss下降方向一致。可以理解为基于q进行特征挖掘，特征信息来源可以是自身相关或者其他主体。
+* 注意力机制: `q*K^T`做一次向量化查询，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, q*K^T权值大小与维度正相关,sqrt(d_model)用于softmax缩放，将梯度集中在明显变化区域。每一次查询匹配一次key表，生成新的val特征，特征优化方向与loss下降方向一致。可以理解为基于q进行特征挖掘，特征信息来源可以是自身相关或者其他主体。
 
 * 多头注意力设计: 折叠分组查询，使用更少的参数量，进行更多特征空间的交互。
 
@@ -42,7 +42,7 @@
 
 # 四. 经典自然语言transformer
 
-## GPT 
+## (一) GPT 
 * 介绍: decoder-only结构，通过mask self-attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如：问答，机器翻译，摘要生成，音乐生成等。
 
 * 预训练: 采用自回归语言模型训练方式，训练目标为预测下一个token，即输入是一段文本，输出是下一个文字。
@@ -77,7 +77,7 @@
 
 ---
 
-#### 2 SFT 监督微调
+#### 2. SFT 监督微调
 * sft监督微调的目的是让模型具备对话能力，通过将prompt嵌入问答模版，如`用户<s>说:你是谁？</s>\n助手<s>回答:我是人工智能助手</s>\n`，构成一个新的语料微调预训练模型，继续训练模型对这类模版的下一个字接龙能力。
   
 * 对话模板通过引入特殊的字符，微调后能够让模型理解问题句柄，知道这是一个问题，从而触发预测问题后面的答案。
@@ -111,7 +111,7 @@
 
 ---
 
-#### 3 preference opimized
+#### 3. preference opimized
   偏好对齐(优化)的目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性等。  
 
 ##### 01 rlhf
@@ -126,12 +126,12 @@ dpo从rlhf总体优化目标的三个原则出发```模型输出尽可能接近�
 
 > 手撕dpo训练代码可以参考本仓库的`/minimind/5-dpo_train_self.py`，前提要先自己捋一遍minimind
 
-#### 4 evalization
+#### 4. evalization
 ... pending 不同的任务评价指标不同，需要系统梳理多任务类型才能进阶
 
 ----
   
-## Bert
+## (二) Bert
 * 介绍: encoder-only结构，只包含transform encoder部分。self-attendtion保证每个tokend都可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类, 多选问答，抽取问答...)，序列标注（词性标注 邮寄地址信息提取）, 语义相似度... 对于bert的解读可以参考[链接](https://github.com/datawhalechina/learn-nlp-with-transformers)
 
 * 预训练: 采用mask language和相邻句子判断的方式进行预训练。  
@@ -152,7 +152,7 @@ dpo从rlhf总体优化目标的三个原则出发```模型输出尽可能接近�
 * 实战: [bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)，快速理解整个bert模型结构，微调数据的加载方式和训练过程。
   > 在本仓库中增加对地址文本进行的序列标注代码，见`/Bert-Chinese-Text-Classification-Pytorch/seqlabel/train.py`，适用地址文本解析
   
-## T5 encoder-decoder 集大成者，统一NLP任务
+## (三) T5 encoder-decoder 集大成者，统一NLP任务
 * 介绍: encoder-decoder结构，使用完整的transform结构，统一的text-to-text框架，适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[论文解读](https://zhuanlan.zhihu.com/p/89719631)
   
   一些结构差异说明：
@@ -214,19 +214,23 @@ Clip官方repo没有开源训练代码，不太好理解算法实现的具体细
 ---
 
 ## LLaVA
-llava更新了三个版本，大体结构为使用clip vit结构的图片编码器得到提取patch embedding，通过一个mlp的投影层，将patch embedding的向量维度与llm 的token embedding的向量维度对齐。将image的特征替换进prompt input_ids的图片标志位，完成特征拼接，共同喂入llm。
+llava更新了三个版本，大体结构为使用clip vit结构的图片编码器得到提取patch embedding，通过一个mlp的投影层(mm adaptor)，将patch embedding的向量维度与llm 的token embedding的向量维度对齐，同时进行语义对齐。将image的特征替换进input_ids的图片标志位，完成特征拼接，共同喂入llm。
 
 llava-1.6对提取patch embedding进行优化，将图片等分为四个区域，加一个中心裁剪得到五张图片，对每张图片都提取patch embeding后，按位置重新进行拼接，进一步提升了空间理解能力，涨点显著。
 
-具备clip和transformer的基础，对llava的代码比较容易理解，主要使用了transformer库的封装，调用clip特征提取器和llm的预训练模型，自定义了图片和text的处理过程，主要见`self.prepare_inputs_labels_for_multimodal`函数。
+具备clip和transformer的基础，对llava的代码比较容易理解，主要使用了transformer库的封装，调用clip特征提取器和llm的预训练模型，自定义了图片和text的对齐过程，主要见`self.prepare_inputs_labels_for_multimodal`函数。
 
 ### 预训练
 
 
 ### 实战
-lora微调
-进行量化训练，qlora微调
-fsdp分布式数据并行训练方式
+llava是学习如何使用transformer库进行大模型训练的好的范式，可以从这个项目中提取以下训练方法，
+- lora微调
+- qlora微调
+- 4bit、8bit量化训练
+- fsdp分布式数据并行训练
+
+我从llava将上述方法单独列出，进行了微小的改动，特别真的fsdp写了一版训练代码，方便快速理解训练实现细节，实战项目[lava_fitune](https://github.com/Aorunfa/llava_finetune)
 
 ---
 
@@ -341,7 +345,7 @@ Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训�
 对教师模型的输出logits进行升维度，e.g 65535
 训练过程中对学生模型输出logits升维，对齐学生模型与教师模型输出
 升维矩阵可以是随机初始化的
-对齐损失可以使用交叉熵
+对齐损失可以使用交叉熵，KLloss； 同时对logits的分布也可以做一些监督
 
 实战见dinov2_finetune 
 
@@ -359,8 +363,10 @@ forward每一个块，通过[箱序数, 箱分位数]恢复块内参数，进行
 实战[lava_fitune](https://github.com/Aorunfa/llava_finetune)
 
 ## 剪枝
+...pending，不太流行这个方式
 
 ---
+
 
 # 附录
 这一部分主要增加一些延展知识
@@ -383,34 +389,45 @@ forward每一个块，通过[箱序数, 箱分位数]恢复块内参数，进行
   
 * 深层RNN可以叠加n个基rnn单元，自下往上，当前层的输出作为上一层的输入，需要维护n个隐状态。同时，可以增加更加复杂的输入编码和输出解码的结构，实现更复杂的特征工程和信息过滤，**适用于结构化时序数据的自动特征工程。**
 
+
 ---
 
-## Model structure
-### 1. BatchNorm vs LayerNorm vs RMSNorm
+
+## 模型结构相关
+### 1. 常见归一化方式对比: BatchNorm vs LayerNorm vs RMSNorm
 
 > 首先明确归一化的作用。数据经过每一层的变化和激活后，数据分布会不断向激活函数的上下限集中，此时激活函数所带来的梯度变化随着层变深而变小，最终出现梯度消失。
 
-> 另一方面，机器学习建模的前提是训练与测试集独立同分布，当出现不同分布的数据时，模型可能降效。基于此，人为将数据拉倒相同分布有利于增强模型鲁棒性。同时将分布主体scale到0-1，集中在激活函数的明显变化区域，有利于解决深层网络梯度消失问题。
+> 另一方面，机器学习建模的前提是训练与测试集独立同分布，当出现不同分布的数据时，在forward时分布差异变大，不利于网络的稳定训练。基于此，人为将数据拉倒相同分布有利于增强模型鲁棒性。同时将分布主体scale到0-1，集中在激活函数的明显变化区域，有利于解决深层网络梯度消失问题。
 
-* batchnorm沿着特征维度对batch一视同仁进行归一化；layernorm沿着batch维度对特征一视同仁进行归一化；两者有两个可学习参数，rescale参数和偏置参数。
-
+* batchnorm沿着特征维度对batch一视同仁进行归一化，例如卷积网络按照channel的每一个维度对batch样本进行归一化
+* layernorm沿着batch维度对特征一视同仁进行归一化，例如tranformer block按照batch样本对其所有维度特征进行归一化
+> - 两者有两个可学习参数，rescale参数和偏置参数
 * rmsnorm是layernorm的改良版，去掉了去中心化的计算过程，提高了计算效率，只有一个可学习参数即rescale参数。
 
-* batchnorm适用于卷积结构，训练时batchsize大均值与方差具备代表性。layernorm适transform、rnn结构，训练时batchsize小但是feature维度高；另一方面，图像数据是客观存在的表示，对每个sample的channel特征进行归一化具有实际意义。而自然语言的表示是人为构造的，通过embeding转换为数字表示，客观上并不存在，对每个sample特征维度进行归一化缺少实际意义。
+* batchnorm适用于卷积结构，训练时batchsize大，均值与方差具备代表性；layernorm适transform、rnn结构，训练时batchsize小但是feature维度高。另一个比较好的解释是，图像数据是客观存在的表示，对每个样本的channel特征进行归一化具有实际意义。而自然语言的表示是人为构造的(token embeding, 对话模版等)，通过embeding转换为数字表示，客观上并不存在，对每个样本特征维度进行归一化缺少实际意义。
   
-### 2. sin-cos pos embedding vs ROPE vs 可学习的位置编码
+### 2. 常见位置编码方式对比: 三角位置编码 Trigonometric PE vs 旋转位置编码 ROPE vs 可训练的位置编码 learnable PE
 
-* 可学习的位置编码好处是位置表征能力更强，但延展性差，无法处理出现超越编码长度的输入，bert模型使用该编码方式。
-
-*  sin-cos pos对正余弦函数进行取值进行绝对位置编码，而rope则依次对相邻两个数值进行旋转变换，前后两者间具有相对的旋转位置关系，实现相对位置编码。两者都具有可延展性，rope在捕捉长序列的相对关系上更具有优势。
+* 三角位置编码对正余弦函数进行取值进行绝对位置编码，而rope则依次对相邻两个数值进行旋转变换，前后两者间具有相对的旋转位置关系，实现相对位置编码。两者都具有可延展性，rope在捕捉长序列的相对关系上更具有优势。
   
-### 3. linear attention
+* 可学习的位置编码提取预设可学习参数矩阵，在训练中进行更新。好处是位置表征能力更强，但延展性差，无法处理出现超越编码长度的输入，bert模型使用该编码方式。
+
+### 3. 线性注意力机制 linear attention
   解决的问题，组件设计
+  softmax计算，矩阵乘法的先后顺序
 
 ---
 
-## Large model fine tune
+## 大模型微调降显存相关
+### 1. bit-quan
+  低bit量化训练，一般直接对参数进行一次量化，需要指定非冻结的参数，一般对于非冻结参数，关键层和敏感层不做量化处理
 
-### Q-Lora
-  应用场景 双重量化 + lora微调，牺牲计算的效率换内存
+### 2. q-lora
+  [论文]()
+  本质上是一个nf4的模型双重量化，权重微调方法使用lora
+  第一次使用fp8对模型权重进量化，得到量化后的权重和分箱分位数向量；第二次使用nf4对量化后的权重进行第二次量化 ---（待确认）
+  牺牲计算的效率换显存，适用单卡多卡环境
 
+### 3. fsdp
+  参数分片的数据并行训练方法，通过参数分片共享，降低显存。需要多卡环境，精度比量化高，但同时显存依赖相应增加
