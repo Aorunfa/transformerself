@@ -182,7 +182,7 @@ dpo从rlhf总体优化目标的三个原则出发```模型输出尽可能接近�
 # 五. 进阶-经典视觉transformer
 这一章介绍tranformer在视觉领域的经典应用，能够快速上手新的视觉项目。
 
-## Clip 对比学习
+## Clip 对比学习弱监督
 [clip](https://github.com/openai/CLIP)作为多模态的早期经典之作，主要通过对齐文本编码和图片编码，让模型能够匹配图片和给定文本，或匹配文本和给定的图片。主要适用视觉表征、文本到图片或图片到文本的匹配场景。特别地，clip预训练使用的大多是图片类别文本，我理解更适用以物体文本搜图。
 
 <div align="center">
@@ -213,7 +213,7 @@ Clip官方repo没有开源训练代码，不太好理解算法实现的具体细
 
 ---
 
-## LLaVA
+## LLaVA 多模态adaptor
 llava更新了三个版本，大体结构为使用clip vit结构的图片编码器得到提取patch embedding，通过一个mlp的投影层(mm adaptor)，将patch embedding的向量维度与llm 的token embedding的向量维度对齐，同时进行语义对齐。将image的特征替换进input_ids的图片标志位，完成特征拼接，共同喂入llm。
 
 llava-1.6对提取patch embedding进行优化，将图片等分为四个区域，加一个中心裁剪得到五张图片，对每张图片都提取patch embeding后，按位置重新进行拼接，进一步提升了空间理解能力，涨点显著。
@@ -234,16 +234,8 @@ llava是学习如何使用transformer库进行大模型训练的好的范式，�
 
 ---
 
-## Dinov2 自监督蒸馏
-视觉自监督训练的经典之作，完成的任务，达成效果，总体思路。 
-用途。。。
-
-[dinov2](https://github.com/facebookresearch/dinov2)
-
-通过监督模型使用局部的特征信息预测整体的特征信息，促使模型理解图片的物体空间分布信息，达到自监督的效果
-
-后续泛化工作 grounding-dinov2
-
+## Dinov2 区分性自监督蒸馏
+[dinov2](https://github.com/facebookresearch/dinov2)是视觉自监督训练的经典之作。总体思路使用局部的特征信息对齐整体的特征信息，使模型能区分图片的物体空间分布信息；整体特征由教师模型提取，局部特征由学生模型提取，教师模型权重由学生模型通过ema更行。主要适用视觉表征适应下游分类、分割等任务和以图搜图等，对比clip是一种自监督方法，预训练不依赖标签信息。
 
 <div align="center">
   <img src="doc/dino_alg.png" alt="dino" width="586" height="214">
@@ -254,25 +246,28 @@ llava是学习如何使用transformer库进行大模型训练的好的范式，�
 * patch embeding: 卷积实现投影矩阵
 * pos embedding: 使用可学习参数相加，分为cls embedding和patch embedding，插值实现patch的延展
 * transformer block: 使用残差块的droppath方法
+* head: MLP, 解耦image-level和patch-level的权重；用于平衡dino和ibot的损失
 
 #### 蒸馏学习
-* 教师模型与学生模型使用同一个模型结构。不同在于，教师模型输入global crop图片，学生模型输入local crop图片
+* 教师模型与学生模型使用同一个模型结构。不同在于，教师模型输入2张global crop，学生模型输入8张local crop
 * 将教师模型与学生模型的输出特征进行对齐，促使学生模型能够通过局部了解整体的能力
 * 教师模型的参数通过ema加权学生模型的参数与历史参数，提高训练稳定性
 
 ### 损失设计
-dinov2使用了多种损失
-* do_dino, 教师与学生模型的cls输出经可能相似，分为global对global、local对global  
-* do_ibot, 对于gloable， 学生模型随机mask一些patch，教师模型正常输入。对mask的学生模型patch输出与教师模型尽可能相似 
-* do_koleo, 促使批次在特征空间内更加均匀分布，只监督学生模型vit的cls输出 
-* SwAV：样本中心化方法， Sinkhorn-Knopp归一化。对教师模型的after输出进行batch的去中心化
+* do_dino: image level，教师与学生模型的cls输出经可能相似，教师global输出对齐对应的学生global、学生所有的local输出
+* do_ibot: patch leval, 对于gloable，学生模型随机mask一些patch，教师模型正常输入。对mask的学生模型patch使用可学习的参数替换embeding，mask patch的最后输出与教师模型的gt尽可能相似
+* do_koleo, 促使批次在特征空间内更加均匀分布，只监督学生模型vit的cls输出。蒸馏需要将输出升到超高维，如果存维度的数值集中在某些维度区域，很有可能造成模型参数更新的“偏心”，侧重对齐某些部分参数而失去的整体性的考量
 
+* SwAV：样本中心化方法， Sinkhorn-Knopp归一化。对教师模型的输出进行batch的去中心化
 
 
 ### 实战
 ...pending
+02 手撕一版友好阅读的训练代码, dino简单预训练代码
 01 使用dino进行图片的retrival，以图搜图 -- 手撕一个retrival代码
-02 手撕一版友好阅读的训练代码
+
+### 一些后续泛化工作
+  * [grounding-dinov](https://github.com/IDEA-Research/GroundingDINO)
 
 ---
 
@@ -431,3 +426,10 @@ forward每一个块，通过[箱序数, 箱分位数]恢复块内参数，进行
 
 ### 3. fsdp
   参数分片的数据并行训练方法，通过参数分片共享，降低显存。需要多卡环境，精度比量化高，但同时显存依赖相应增加
+
+### 4. gradient checkpointing
+  梯度检查点技术。
+  * 原本在神经网络进行forward的过程中，所有的激活值(激活函数的输出)需要被保留，在backward计算梯度时使用。
+  * 梯度检查点技术则选择性的保留一些激活输出，同时丢弃一些激活输出。在backward过程中，当需要的激活值被丢弃时，往上从最近被保留的激活值开始，往下重新计算直至得到被丢弃的激活值
+  * 计算速度取决于保留检查点的分布，显存使用则取决于保存的检查点数量，数量越多分布越分散，计算速度越快，但显存依赖越多
+  * peft库的模型封装可以通过use_gradient_checkpointing选择使用梯度检查点技术
