@@ -1,0 +1,6 @@
+boto3==1.36.17
+numpy==1.26.4
+pandas==2.2.3
+scikit-learn==1.6.1
+torch==2.0.0
+tokenizers==0.21.0

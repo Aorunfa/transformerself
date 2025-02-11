@@ -1,6 +1,5 @@
 import sys
 import os
-sys.path.insert(0, '/home/chaofeng/Bert-Chinese-Text-Classification-Pytorch')
 os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
 
@@ -14,11 +13,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn import metrics
 import time
-from utils import get_time_dif
 from pytorch_pretrained.optimization import BertAdam
 from torch.optim import lr_scheduler
+from datetime import timedelta
 
-# 权重初始化，默认xavier
+def get_time_dif(start_time):
+    """获取已使用时间"""
+    end_time = time.time()
+    time_dif = end_time - start_time
+    return timedelta(seconds=int(round(time_dif)))
+
+# 权重初始化
 def init_network(model, method='xavier', exclude='embedding', seed=123):
     for name, w in model.named_parameters():
         if exclude not in name:
@@ -74,7 +79,6 @@ def train(config, model, train_iter, dev_iter):
             loss = F.cross_entropy(active_logits, active_labels)
 
             
-            # loss = F.cross_entropy(outputs, labels)
             loss.backward()
             optimizer.step()
       
@@ -170,11 +174,8 @@ def evaluate(config, model, data_iter, test=False):
     return acc, loss_total / len(data_iter)
 
 
-"""
-搞清楚lr是如何变化的
-"""
 if __name__ == '__main__':
-    cfg = Config('/home/chaofeng/Bert-Chinese-Text-Classification-Pytorch/seqlabel')
+    cfg = Config(os.path.dirname(__file__))
     model = Model(cfg)
     model.to(cfg.device)
     train_loader = get_dataloader(cfg.train_path, cfg.tokenizer, cfg.max_length, num_workers=4, batch_size=cfg.batch_size)

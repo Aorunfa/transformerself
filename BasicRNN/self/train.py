@@ -35,7 +35,7 @@ device = 'cuda:3'
 rnn.to(device)
 
 ### add mix prcision ###
-amp = torch.amp.autocast(device_type='cuda', enabled=False) 
+amp = torch.amp.autocast(device_type='cuda', dtype=torch.float16, enabled=True) 
 scaler = torch.amp.GradScaler(device=device)  # 防止amp梯度下溢超边界
 ######################
 for epoch in range(epochs):

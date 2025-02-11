@@ -1,4 +1,3 @@
-## **Note 该项目还在持续更新，有空写一点，如果你想加入这个项目 请联系我**
 # 一. 介绍
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 * 一个用于学习基于transformer的nlp和vit模型的菜鸟仓库，介绍模型原理，训练步骤，微调方法等
@@ -149,8 +148,7 @@ dpo从rlhf总体优化目标的三个原则出发```模型输出尽可能接近�
 
 * 微调: 以bert作为backbone增加输出头，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果。
 
-* 实战: [bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)，快速理解整个bert模型结构，微调数据的加载方式和训练过程。
-  > 在本仓库中增加对地址文本进行的序列标注代码，见`/Bert-Chinese-Text-Classification-Pytorch/seqlabel/train.py`，适用地址文本解析
+* 实战: [bert中文地址分类]在本仓库中增加对地址文本进行的序列标注代码，见`/Bert-Chinese-Email-Addresses-Classification`，适用地址文本解析，快速理解整个bert模型结构，微调数据的加载方式和训练过程。参考于项目[bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)
   
 ## (三) T5 encoder-decoder 集大成者，统一NLP任务
 * 介绍: encoder-decoder结构，使用完整的transform结构，统一的text-to-text框架，适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[论文解读](https://zhuanlan.zhihu.com/p/89719631)
