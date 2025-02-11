@@ -148,7 +148,7 @@ dpo从rlhf总体优化目标的三个原则出发```模型输出尽可能接近�
 
 * 微调: 以bert作为backbone增加输出头，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果。
 
-* 实战: [bert中文地址分类]在本仓库中增加对地址文本进行的序列标注代码，见`/Bert-Chinese-Email-Addresses-Classification`，适用地址文本解析，快速理解整个bert模型结构，微调数据的加载方式和训练过程。参考于项目[bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)
+* 实战bert中文地址分类:见本仓库`/Bert-Chinese-Email-Addresses-Classification`，适用地址文本解析，快速理解整个bert模型结构，微调数据的加载方式和训练过程。参考于项目[bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)
   
 ## (三) T5 encoder-decoder 集大成者，统一NLP任务
 * 介绍: encoder-decoder结构，使用完整的transform结构，统一的text-to-text框架，适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[论文解读](https://zhuanlan.zhihu.com/p/89719631)
@@ -170,7 +170,7 @@ dpo从rlhf总体优化目标的三个原则出发```模型输出尽可能接近�
   > * text2text输入输出格式: 输入为`任务类型prefix + input; 目标prefix + target`，如翻译任务将输入`{'en': 'That is good', 'ge': 'Das ist gut'}`转换为`{'input': 'translate English to German: That is good', 'target': 'Das ist gut'}`最终合并为prefix标注输入`translate English to German: That is good. target: Das ist gut`。对于其他任务的转换形式见论文附录D。
   > * 还是全量微调更胜一筹，逐步解冻次之
 
-* 实战：中文文本摘要总结实战，见目录`/T5-pegasus-chinese`，训练loss和一case大致符合预期
+* 实战：中文文本摘要总结实战，见目录`/T5-pegasus-chinese`，训练loss和case大致符合预期
   > * greedy-decoding vs beam-search：两者适用于自回归场景。
   > * greedy-decoding，每次选择概率最大的token作为下一个输入。
   > * beam-search，设定beam size为k, 第一次回归选择top k的输出token作为k个波束序列, 下一次依次对k个波束进行自回归，得到k*k个波束，按照token的累乘或平均logit保留top k的波束序列，依次往后执行k个波束的自回归和排序过滤操作。保证模型每次回归只执行k次推理。一般用于翻译和摘要输出。
