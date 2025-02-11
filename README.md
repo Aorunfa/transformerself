@@ -1,20 +1,20 @@
 ## **Note 该项目还在持续更新，有空写一点，如果你想加入这个项目 请联系我**
 # 一. 介绍
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-* 一个用于学习基于transformer的nlp和vit模型的仓库，梳理模型原理，训练步骤，微调方法等
+* 一个用于学习基于transformer的nlp和vit模型的菜鸟仓库，介绍模型原理，训练步骤，微调方法等
 * 分享能快速理解并上手的代码实战项目（或推荐、或开发）
-* 适用于具备一定torch基础、想要快速入门transform、能够阅读代码并二次开发的同学
+* 适用于具备一定torch基础、想要快速入门transform、想要能够阅读代码并二次开发的同学
 
 
 # 二. transformer 论文原理
-首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下要点
+首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下重点
 
 <div align="center">
   <img src="doc/transformer_arch.png" alt="论文模型结构" width="384" height="548">
   <p style="font-size: 10px; color: gray;">经典transformer</p>
 </div>
 
-* 注意力机制: `q*K^T`做一次向量化查询，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, q*K^T权值大小与维度正相关,sqrt(d_model)用于softmax缩放，将梯度集中在明显变化区域。每一次查询匹配一次key表，生成新的val特征，特征优化方向与loss下降方向一致。可以理解为基于q进行特征挖掘，特征信息来源可以是自身相关或者其他主体。
+* 注意力机制: `q*K^T`做一次向量化查询，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, q*K^T权值大小与维度正相关, sqrt(d_model)用于softmax缩放，将梯度集中在明显变化区域。每一次查询匹配一次key表，生成新的val特征，特征优化方向与loss下降方向一致。可以理解为基于q进行特征挖掘，特征信息来源可以是自身相关或者其他主体。
 
 * 多头注意力设计: 折叠分组查询，使用更少的参数量，进行更多特征空间的交互。
 
@@ -177,6 +177,9 @@ dpo从rlhf总体优化目标的三个原则出发```模型输出尽可能接近�
   > * greedy-decoding，每次选择概率最大的token作为下一个输入。
   > * beam-search，设定beam size为k, 第一次回归选择top k的输出token作为k个波束序列, 下一次依次对k个波束进行自回归，得到k*k个波束，按照token的累乘或平均logit保留top k的波束序列，依次往后执行k个波束的自回归和排序过滤操作。保证模型每次回归只执行k次推理。一般用于翻译和摘要输出。
 
+## (四) DeepseekV3 decoder-only 推理训练低成本怪物
+* 具体的技术点解读和代码注释，参照我的另一个仓库[deepseek_learning](https://github.com/Aorunfa/deepseek_learning)
+
 ---
 
 # 五. 进阶-经典视觉transformer
@@ -230,7 +233,7 @@ llava是学习如何使用transformer库进行大模型训练的好的范式，�
 - 4bit、8bit量化训练
 - fsdp分布式数据并行训练
 
-我从llava将上述方法单独列出，进行了微小的改动，特别真的fsdp写了一版训练代码，方便快速理解训练实现细节，实战项目[lava_fitune](https://github.com/Aorunfa/llava_finetune)
+我从llava将上述方法单独列出，进行了微小的改动，特别针对fsdp写了一版训练代码，方便快速理解训练实现细节，实战项目[lava_fitune](https://github.com/Aorunfa/llava_finetune)
 
 ---
 
@@ -264,6 +267,9 @@ llava是学习如何使用transformer库进行大模型训练的好的范式，�
 ### 实战
 ...pending
 02 手撕一版友好阅读的训练代码, dino简单预训练代码
+    dinov2 原始的仓库项目深度使用的fsdp训练的组件，实现模型分片、进程同步、分片模型保存的
+    
+
 01 使用dino进行图片的retrival，以图搜图 -- 手撕一个retrival代码
 
 ### 一些后续泛化工作
@@ -305,31 +311,6 @@ Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训�
 
 ---
 
-## Sam2 提示区域与记忆模块
-...pending 代码阅读工程量比较大。
-使用sam2的记忆组件进行物体追踪工作(samurai)[https://github.com/yangchris11/samurai]
-
-#### 提示编码
-
-#### 图片编码
-
-#### 记忆编码
-
-#### 物体追踪
-
----
-
-## RTDETR
-...ongoing，实时检测，使用vit解决nms延迟，对标yolo
-
-### 模型结构
-
-### 训练
-
-### 实战
-
----
-
 # 六. 模型压缩
 ... ongoing
 
@@ -348,7 +329,7 @@ Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训�
 适用大模型训练、推理降低显存，牺牲时间换空间
 
 量化原理:
-对给定权重参数进行分块，分块原则可以按照size,layer等
+对给定权重参数进行分块，分块原则一般设定一个block_size，对block_size内的向量进行量化
 对每一块的参数分布去中心化或不处理
 对每一块参数进行分位数分箱，记录每一个分位数对应的数值; 设定异常阈值，对于超阈值的参数保留使用fp16
 使用箱序数作为原来的参数表示
@@ -407,6 +388,10 @@ forward每一个块，通过[箱序数, 箱分位数]恢复块内参数，进行
 * 三角位置编码对正余弦函数进行取值进行绝对位置编码，而rope则依次对相邻两个数值进行旋转变换，前后两者间具有相对的旋转位置关系，实现相对位置编码。两者都具有可延展性，rope在捕捉长序列的相对关系上更具有优势。
   
 * 可学习的位置编码提取预设可学习参数矩阵，在训练中进行更新。好处是位置表征能力更强，但延展性差，无法处理出现超越编码长度的输入，bert模型使用该编码方式。
+
+#### ROPE 专门介绍
+ongoing
+
 
 ### 3. 线性注意力机制 linear attention
   解决的问题，组件设计
