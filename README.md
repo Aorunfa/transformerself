@@ -204,32 +204,37 @@ clip实现vit，以224×224特征、32×32patch size为例:
 
 #### 一些后续泛化工作
   * [Blip](https://github.com/salesforce/BLIP)，增加图片caption、qa能力
-  * [LLaVA](https://github.com/haotian-liu/LLaVA)，clip visual enoder + llm，图片理解问答
+  * [LLaVA](https://github.com/haotian-liu/LLaVA)，clip visual enoder + llm，高效对齐多模态指令遵循
   * [DALL-E](https://github.com/openai/DALL-E)，增加基于VAE的文本到图片的生成
   * ...
 
 #### 实战
-CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程。
+CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程。  
 Clip官方repo没有开源训练代码，不太好理解算法实现的具体细节，为此我结合[open_clip](https://github.com/mlfoundations/open_clip)，写了一版clip训练代码，可以参照[clip_finetune](https://github.com/Aorunfa/clip_finetune)，只需要少量数据和资源进行快速复现，方便快速理解算法设计细节
 
 ---
 
-## LLaVA 多模态adaptor
-llava更新了三个版本，大体结构为使用clip vit结构的图片编码器得到提取patch embedding，通过一个mlp的投影层(mm adaptor)，将patch embedding的向量维度与llm 的token embedding的向量维度对齐，同时进行语义对齐。将image的特征替换进input_ids的图片标志位，完成特征拼接，共同喂入llm。
+## LLaVA adapter高效多模态指令对齐
+llava更新了三个版本v1、v1.5、v1.6。整体结构为使用vit作为vison-encoder，权重初始化自clip，使用预训练的llama作为text decoder，中间设置一个adapter，将vison token对齐到text token的embedding向量空间。    
+在vison token featuer 前后增加特殊的图片开始和结束标志位，和text token完成特征拼接。   
+llava的优势在于，使用的训练数据极少，完整的训练时间非常短，8A100一天完成训练。   
 
-llava-1.6对提取patch embedding进行优化，将图片等分为四个区域，加一个中心裁剪得到五张图片，对每张图片都提取patch embeding后，按位置重新进行拼接，进一步提升了空间理解能力，涨点显著。
+> **llava-v1**的adapter设置为一个简单的投影矩阵（单linear层）完成对齐，输入图像分辨率为224。
 
-具备clip和transformer的基础，对llava的代码比较容易理解，主要使用了transformer库的封装，调用clip特征提取器和llm的预训练模型，自定义了图片和text的对齐过程，主要见`self.prepare_inputs_labels_for_multimodal`函数。
+> **llava-1.5**的adaptr设置为一个两层的MLP层完成对齐，vison encoder使用更大的clip vit模型，输入图像分辨率为336，同时prompt中设定短答案输出的格式，提高短输出benchmark的准确度
 
-### 预训练
+> **llava-1.6**从源码看来，是对论文中llava-1.5=HD的实现。使用224分辨力的clip作为vision encoder。对高分辨率的图片resize并padding到预设高分辨率，将图片等分为四个区域加上一张原始resize图片(224的分辨率)，分布进行encoder后完成拼接，得到token featuer
 
+### 训练
+训练包括两个阶段，全程冻结vison encoder，第一阶段只训练adapter，完成模态对齐。第二阶段训练adaper和llm，完成指令微调。  
 
 ### 实战
-llava是学习如何使用transformer库进行大模型训练的好的范式，可以从这个项目中提取以下训练方法，
+llava是学习如何使用transformer库进行大模型训练的好的范式，可以从这个项目中提取以下训练方法
 - lora微调
 - qlora微调
 - 4bit、8bit量化训练
 - fsdp分布式数据并行训练
+- deepseed的zero范式和accelerate加速
 
 我从llava将上述方法单独列出，进行了微小的改动，特别针对fsdp写了一版训练代码，方便快速理解训练实现细节，实战项目[lava_fitune](https://github.com/Aorunfa/llava_finetune)
 
@@ -267,7 +272,6 @@ llava是学习如何使用transformer库进行大模型训练的好的范式，�
 02 手撕一版友好阅读的训练代码, dino简单预训练代码
     dinov2 原始的仓库项目深度使用的fsdp训练的组件，实现模型分片、进程同步、分片模型保存的
     
-
 01 使用dino进行图片的retrival，以图搜图 -- 手撕一个retrival代码
 
 ### 一些后续泛化工作
