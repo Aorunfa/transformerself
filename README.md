@@ -26,28 +26,27 @@
   <p style="font-size: 10px; color: gray;">经典transformer</p>
 </div>
 
-首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下重点: 
+首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下重点，陈述思路为从局部到整体: 
 
-* 注意力机制: `q*K^T`做一次向量化查询，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, q*K^T权值大小与维度正相关, sqrt(d_model)用于softmax缩放，将梯度集中在明显变化区域。每一次查询匹配一次key表，生成新的val特征，特征优化方向与loss下降方向一致。可以理解为基于q进行特征挖掘，特征信息来源可以是自身相关或者其他主体。
+* 注意力机制: `q*K^T`做一次向量化查询，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, q*K^T权值大小量级与维度正相关, sqrt(d_model)用于缩放，类似于标准化，将softmax梯度集中在明显变化区域。每一次查询匹配一次key表，生成新的val特征，特征提取方向与loss下降方向一致。可以理解为基于query进行特征挖掘，特征信息来源可以是自身(self-attantion)或者其他对象(cross-attention)
 
-* 多头注意力设计: 折叠分组查询，使用更少的参数量，进行更多特征空间的交互。
+* 多头注意力设计: 按照d_model折叠分组查询，参数量使用更少，最后通过一个ffn进行全局特征的交互，保证效果相当
 
-* 注意力mask: 在seq_length维度保证当前查询只能看到自己以及之前的信息，模拟rnn的串行输出，在decoder中的mask cross-attention出现。
+* 注意力mask: 在sequence上，保证当token前查询只能看到自己以及之前的token信息，模拟rnn的串行输出，在decoder的自注意力层使用causal-mask作用于`q*K^T`注意力得分实现
 
-* 可训参数矩阵`Wq Wk Wv Wo` 实现类似自动化特征工程的效果，如对一个查询向量q计算`q * Wk^T`可以得到新的查询，查询优化方向和loss下降方向一致，torch中以nn.Linear
-线性层表示这些矩阵。  
+* 可训参数矩阵`Wq Wk Wv Wo`实现类似自动化特征工程的效果，如对一个token x计算`q=x Wq^T`可以生成一个查询向量，查询优化方向和loss下降方向一致，torch中以nn.Linear线性层表示这些矩阵  
 
-* FFN前馈神经网络, 隐藏层维度设置`4*d_model`，特征向量映射在更高维的隐空间交互，实现类似特征增强的效果, 4这个值目前看没太多意义，应该是基于最佳实验原则设计。
+* FFN前馈神经网络, 隐藏层维度设置`4*d_model`，特征向量映射在更高维的隐空间交互，实现类似特征增强的效果, 4这个值目前看没太多意义，应该是基于最佳实验原则设计
 
-* pos embeding沿着seq_length和d_model对应的两个维度对token embedding加上pos数值，标记位置信息。简单理解一个特征矩阵Q中任意一个数值通过向前diff和向上diff可以锁定位置坐标，模型可以学到这种模式。
+* pos embedding沿着sequence_length和d_model对应的两个维度对token embedding加上位置数值，标记位置信息。简单理解一个特征矩阵Q中任意一个数值通过向前diff和向上diff可以提取位置信息，模型可以学到这种模式
 
-* token embedding矩阵为可学习矩阵，实现将一个token_id转换为对应embedding向量，维度为d_model。
+* token embedding矩阵是可学习矩阵，实现将一个token_id转换为对应embedding向量，维度数量d_model。注意，与卷积 通道数值不同，每一个维度下的token向量值并不是指向某种性质，纵向对比没有意义
 
-* 训练阶段，对比rnn, transformer能够做到训练的并行，即输出一次性包含了所有input片段的next token，得力于attention mask的设计, 模拟信息串行。
+* 训练阶段，对比rnn, transformer能够做到训练的并行，即输出一次性包含了所有输入片段的next token，这一点归功于causal-mask的设计, 模拟了信息串行
 
-* 预测阶段，与rnn相同，transformer自回归预测下一个token，当出现终止符则停止。
+* 预测阶段，与rnn相同，transformer自回归预测下一个token，当出现终止符则停止
   
-**论文链接[attendion all you need](https://arxiv.org/abs/1706.03762)**，论文模型结构为encoder-decoder的结构，基于两个组件所衍生的经典模型见第四节。
+**论文[attendion all you need](https://arxiv.org/abs/1706.03762)**，论文模型结构为encoder-decoder的结构，基于两个组件所衍生的自然语言经典模型见第四节
 
 # 三. 代码解读
 
