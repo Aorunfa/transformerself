@@ -8,7 +8,7 @@
 - [论文原理](#二-论文原理)
 - [代码解读](#三-代码解读)
 - [经典自然语言transformer](#四-经典自然语言transformer)
-  - [GPT](##(一)GPT)
+  - [GPT](##-一-GPT)
   - [Bert](##(二)Bert)
   - [T5](##(三)T5-encoder-decoder-集大成者-统一NLP任务)
   - [DeepseekV3](##(四)DeepseekV3-decoder-only-推理训练低成本怪物)
