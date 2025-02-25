@@ -8,7 +8,7 @@
 - [论文原理](#二-论文原理)
 - [代码解读](#三-代码解读)
 - [经典自然语言transformer](#四-经典自然语言transformer)
-  - [GPT](##GPT)
+  - [GPT](##(一)GPT)
   - [Bert](##(二)Bert)
   - [T5](##(三)T5-encoder-decoder-集大成者-统一NLP任务)
   - [DeepseekV3](##(四)DeepseekV3-decoder-only-推理训练低成本怪物)
@@ -56,7 +56,7 @@
 
 # 四. 经典自然语言transformer
 
-## GPT
+## (一)GPT
 * 介绍: decoder-only结构，通过mask self-attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如：问答，机器翻译，摘要生成，音乐生成等。
 
 * 预训练: 采用自回归语言模型训练方式，训练目标为预测下一个token，即输入是一段文本，输出是下一个文字。
