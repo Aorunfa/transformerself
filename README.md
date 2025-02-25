@@ -24,7 +24,7 @@
 首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下重点
 
 <div align="center">
-  <img src="doc/transformer_arch.png" alt="论文模型结构" width="384" height="548">
+  <img src="doc/transformer_arch.png" alt="论文模型结构" width="450" height="570">
   <p style="font-size: 10px; color: gray;">经典transformer</p>
 </div>
 
