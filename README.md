@@ -6,18 +6,18 @@
 
 ## 目录
 - [论文原理](#二-论文原理)
-- [代码解读](#代码解读)
-- [经典自然语言transformer](#经典自然语言transformer)
+- [代码解读](#三-代码解读)
+- [经典自然语言transformer](#四-经典自然语言transformer)
   - [GPT](##(一)GPT)
   - [Bert](##(二)Bert)
   - [T5](##(三)T5-encoder-decoder-集大成者-统一NLP任务)
   - [DeepseekV3](##(四)DeepseekV3-decoder-only-推理训练低成本怪物)
-- [进阶-经典视觉transformer](#进阶-经典视觉transformer)
+- [进阶-经典视觉transformer](#五-进阶-经典视觉transformer)
   - [Clip](##Clip-对比学习弱监督)
   - [LLaVa](##LLaVA-adapter高效多模态指令对齐)
   - [Dinov2](##Dinov2-区分性自监督蒸馏)
   - [Hiera](##HieraMAE自监督预训练)
-- [模型压缩](#模型压缩)
+- [模型压缩](#六-模型压缩)
 - [附录](#附录)
 
 # 二. 论文原理
