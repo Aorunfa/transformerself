@@ -13,10 +13,10 @@
   - [T5](##(三)T5-encoder-decoder-集大成者-统一NLP任务)
   - [DeepseekV3](##(四)DeepseekV3-decoder-only-推理训练低成本怪物)
 - [进阶-经典视觉transformer](#五-进阶-经典视觉transformer)
-  - [Clip](##Clip-对比学习弱监督)
-  - [LLaVa](##LLaVA-adapter高效多模态指令对齐)
-  - [Dinov2](##Dinov2-区分性自监督蒸馏)
-  - [Hiera](##HieraMAE自监督预训练)
+  - [Clip](##(一)Clip-对比学习弱监督)
+  - [LLaVa](##(二)LLaVA-adapter高效多模态指令对齐)
+  - [Dinov2](##(三)Dinov2-区分性自监督蒸馏)
+  - [Hiera](##(四)HieraMAE自监督预训练)
 - [模型压缩](#六-模型压缩)
 - [附录](#附录)
 
@@ -198,7 +198,7 @@ dpo从ppo总体优化目标的三个原则出发```模型输出尽可能接近�
 # 五. 进阶-经典视觉transformer
 这一章介绍tranformer在视觉领域的经典应用，能够快速上手新的视觉项目。
 
-## Clip 对比学习弱监督
+## (一)Clip 对比学习弱监督
 [clip](https://github.com/openai/CLIP)作为多模态的早期经典之作，主要通过对齐文本编码和图片编码，让模型能够匹配图片和给定文本，或匹配文本和给定的图片。主要适用视觉表征、文本到图片或图片到文本的匹配场景。特别地，clip预训练使用的大多是图片类别文本，我理解更适用以物体文本搜图。
 
 <div align="center">
@@ -229,7 +229,7 @@ Clip官方repo没有开源训练代码，不太好理解算法实现的具体细
 
 ---
 
-## LLaVA adapter高效多模态指令对齐
+## (二)LLaVA adapter高效多模态指令对齐
 llava更新了三个版本v1、v1.5、v1.6。整体结构为使用vit作为vison-encoder，权重初始化自clip，使用预训练的llama作为text decoder，中间设置一个adapter，将vison token对齐到text token的embedding向量空间。    
 在vison token featuer 前后增加特殊的图片开始和结束标志位，和text token完成特征拼接。   
 llava的优势在于，使用的训练数据极少，完整的训练时间非常短，8A100一天完成训练。   
@@ -255,7 +255,7 @@ llava是学习如何使用transformer库进行大模型训练的好的范式，�
 
 ---
 
-## Dinov2 区分性自监督蒸馏
+## (三)Dinov2 区分性自监督蒸馏
 [dinov2](https://github.com/facebookresearch/dinov2)是视觉自监督训练的经典之作。总体思路使用局部的特征信息对齐整体的特征信息，使模型能区分图片的物体空间分布信息；整体特征由教师模型提取，局部特征由学生模型提取，教师模型权重由学生模型通过ema更行。主要适用视觉表征适应下游分类、分割等任务和以图搜图等，对比clip是一种自监督方法，预训练不依赖标签信息。
 
 <div align="center">
@@ -295,7 +295,7 @@ llava是学习如何使用transformer库进行大模型训练的好的范式，�
 ---
 
 
-## Hiera MAE自监督预训练
+## (四)Hiera MAE自监督预训练
 > 引子：之所以把hiera加进来，是由于其用到了MAE的高效自监督训练方法理解图片结构信息，同时sam2也以hiera作为高效特征提取器
 
 [hiera](https://github.com/facebookresearch/hiera)第一个特点是优化了传统vit结构在特征分辨率始终如一的特性，使用了池化的方式减小深层的特征的分辨率，提高了参数利用率(可以类比于经典高效卷积结构大多是多层级的分辨率特征图进行组合)，第二是采用了[mask-auto-encoder](https://github.com/facebookresearch/mae)的自监督方法进行预训练  
