@@ -4,8 +4,18 @@
 * 分享能快速理解并上手的代码实战项目（或推荐、或开发）
 * 适用于具备一定torch基础、想要快速入门transform、想要能够阅读代码并二次开发的同学
 
+## 目录
+- [论文原理](#论文原理)
+- [代码解读](#代码解读)
+- [经典自然语言transformer](#经典自然语言transformer)
+  - [(一)GPT](##(一)GPT)
+  - [(二)Bert](##(二)Bert)
+  - [(三)T5](##(三)T5-encoder-decoder-集大成者-统一NLP任务)
+  - [(四)DeepseekV3](##(四)DeepseekV3-decoder-only-推理训练低成本怪物)
+- [进阶-经典视觉transformer](#进阶-经典视觉transformer)
+- [模型压缩](#模型压缩)
 
-# 二. transformer 论文原理
+# 二. 论文原理
 首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下重点
 
 <div align="center">
@@ -34,14 +44,14 @@
   
 **论文链接[attendion all you need](https://arxiv.org/abs/1706.03762)**，论文模型结构为encoder-decoder的结构，基于两个组件所衍生的经典模型见第四节。
 
-# 三. transformer 论文代码解读
+# 三. 代码解读
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的`ouput_head`是一个单独的线性层，与embeding层不共享权重。
 
 # 四. 经典自然语言transformer
 
-## (一) GPT 
+## (一)GPT 
 * 介绍: decoder-only结构，通过mask self-attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如：问答，机器翻译，摘要生成，音乐生成等。
 
 * 预训练: 采用自回归语言模型训练方式，训练目标为预测下一个token，即输入是一段文本，输出是下一个文字。
@@ -130,7 +140,7 @@ dpo从ppo总体优化目标的三个原则出发```模型输出尽可能接近�
 
 ----
   
-## (二) Bert
+## (二)Bert
 * 介绍: encoder-only结构，只包含transform encoder部分。self-attendtion保证每个tokend都可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类, 多选问答，抽取问答...)，序列标注（词性标注 邮寄地址信息提取）, 语义相似度... 对于bert的解读可以参考[链接](https://github.com/datawhalechina/learn-nlp-with-transformers)
 
 * 预训练: 采用mask language和相邻句子判断的方式进行预训练。  
@@ -150,7 +160,7 @@ dpo从ppo总体优化目标的三个原则出发```模型输出尽可能接近�
 
 * 实战bert中文地址分类:见本仓库`/Bert-Chinese-Email-Addresses-Classification`，适用地址文本解析，快速理解整个bert模型结构，微调数据的加载方式和训练过程。参考于项目[bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)
   
-## (三) T5 encoder-decoder 集大成者，统一NLP任务
+## (三)T5 encoder-decoder 集大成者，统一NLP任务
 * 介绍: encoder-decoder结构，使用完整的transform结构，统一的text-to-text框架，适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[论文解读](https://zhuanlan.zhihu.com/p/89719631)
   
   一些结构差异说明：
@@ -175,7 +185,7 @@ dpo从ppo总体优化目标的三个原则出发```模型输出尽可能接近�
   > * greedy-decoding，每次选择概率最大的token作为下一个输入。
   > * beam-search，设定beam size为k, 第一次回归选择top k的输出token作为k个波束序列, 下一次依次对k个波束进行自回归，得到k*k个波束，按照token的累乘或平均logit保留top k的波束序列，依次往后执行k个波束的自回归和排序过滤操作。保证模型每次回归只执行k次推理。一般用于翻译和摘要输出。
 
-## (四) DeepseekV3 decoder-only 推理训练低成本怪物
+## (四)DeepseekV3 decoder-only 推理训练低成本怪物
 * 具体的技术点解读和代码注释，参照我的另一个仓库[deepseek_learning](https://github.com/Aorunfa/deepseek_learning)
 
 ---
