@@ -21,12 +21,11 @@
 - [附录](#附录)
 
 # 二. 论文原理
-首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下重点
-
 <div align="center">
   <img src="doc/transformer_arch.png" alt="论文模型结构" width="450" height="570">
   <p style="font-size: 10px; color: gray;">经典transformer</p>
 </div>
+首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下重点: 
 
 * 注意力机制: `q*K^T`做一次向量化查询，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, q*K^T权值大小与维度正相关, sqrt(d_model)用于softmax缩放，将梯度集中在明显变化区域。每一次查询匹配一次key表，生成新的val特征，特征优化方向与loss下降方向一致。可以理解为基于q进行特征挖掘，特征信息来源可以是自身相关或者其他主体。
 
