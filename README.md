@@ -212,8 +212,8 @@ decoder-only的MOE架构，推理训练低成本怪物
 ## (一)Clip 对比学习弱监督
 [clip](https://github.com/openai/CLIP)作为多模态的早期经典之作，主要通过对齐文本编码和图片编码，让模型能够匹配图片和给定文本，或匹配文本和给定的图片。主要适用视觉表征、文本到图片或图片到文本的匹配场景。特别地，clip预训练使用的大多是图片类别文本，我理解更适用以物体文本搜图
 <div align="center">
-  <img src="doc/clip_alg.png" alt="clip" width="606" height="220">
-  <p style="font-size: 10px; color: gray;">clip思路(搬运自CLIP)</p>
+  <img src="doc/clip_alg.png" alt="clip" width="650" height="260">
+  <p style="font-size: 10px; color: gray;">clip思路</p>
 </div>
 
 * 预训练
@@ -234,16 +234,17 @@ decoder-only的MOE架构，推理训练低成本怪物
   > * ...
 
 #### 实战
-实战[clip_finetune](https://github.com/Aorunfa/clip_finetune)，CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程。  
+实战[clip_finetune](https://github.com/Aorunfa/clip_finetune)，CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程  
 clip官方repo没有开源训练代码，不太好理解算法实现的具体细节，为此我结合[open_clip](https://github.com/mlfoundations/open_clip)，增加了clip训练代码，只需要少量数据和资源进行快速复现，方便快速理解算法设计细节
 
 ---
 
 ## (二)LLaVA adapter高效多模态指令对齐
-llava更新了三个版本v1、v1.5、v1.6。整体结构为使用vit作为vison-encoder，权重初始化自clip，使用预训练的llama作为text decoder，中间设置一个adapter，将vison token对齐到text token的embedding向量空间。   
-在vison token featuer 前后增加特殊的图片开始和结束标志位，和text token完成特征拼接。   
+[llava](https://github.com/haotian-liu/LLaVA)更新了三个版本v1、v1.5、v1.6。整体结构为使用vit作为vison encoder，权重初始化自clip，使用预训练的llama作为text decoder，中间设置一个adapter，将vison token对齐到text token的向量空间。   
 
-**llava的优势在于，使用的训练数据极少，完整的训练时间非常短，8×A100一天完成训练**
+在vison token featuer 前后增加特殊的图片开始和结束标志位，和text token完成特征拼接，模板化输入  
+
+*llava的优势在于，使用的训练数据极少，完整的训练时间非常短，8×A100一天完成训练*
 
 <div align="center">
   <img src="doc/llava.png" alt="lora" width="718" height="240">
@@ -254,8 +255,8 @@ llava更新了三个版本v1、v1.5、v1.6。整体结构为使用vit作为vison
 > * adapter设置为一个简单的投影矩阵（单linear层）完成对齐，输入图像分辨率为224。
 
 > **llava-1.5**
-> * adaptr设置为一个两层的MLP层完成对齐，vison encoder使用更大的clip vit模型，输入图像分辨率为336
-> * 同时prompt中设定短答案输出的格式，增加固定尾缀，提高短输出benchmark的准确度。
+> * adaptr设置为一个两层的MLP完成对齐，vison encoder使用更大的clip vit模型，输入图像分辨率为336
+> * 同时prompt中设定短答案输出的格式，增加固定尾缀，提高短输出benchmark的准确度
 
 <div align="center">
   <img src="doc/llava-1.6.png" alt="lora" width="834" height="276">
@@ -263,21 +264,19 @@ llava更新了三个版本v1、v1.5、v1.6。整体结构为使用vit作为vison
 </div>
 
 > **llava-1.6**
-> * 从源码看来，是对论文中llava-1.5-HD的实现。使用224分辨力的clip作为vision encoder。
+> * 从源码看来，是对论文中llava-1.5-HD的实现。使用224分辨力的clip作为vision encoder
 > * 对高分辨率的图片resize并padding到预设高分辨率，将图片等分为四个区域加上一张原始resize图片(224的分辨率)，分别进行encoder后完成拼接，得到vison token
 
 ### 训练
-训练包括两个阶段，全程冻结vison encoder，第一阶段只训练adapter，完成模态对齐。第二阶段训练adaper和llm，完成指令微调
+训练包括两个阶段，全程冻结vison encoder，第一阶段只训练adapter，完成模态对齐。第二阶段训练adaper和llm，完成指令微调，可见其高效性
 
-### 实战
-llava是学习如何使用transformer库进行大模型训练的好的范式，可以从这个项目中提取以下训练方法
+### 实战: llava快速入门transformer微调组件
+实战[lava_fitune](https://github.com/Aorunfa/llava_finetune)，我从llava将下述方法单独列出，进行了微小的改动，特别针对fsdp和ddp写了一版训练代码，方便快速理解训练实现细节
 - lora微调
 - qlora微调
 - 4bit、8bit量化训练
 - fsdp分布式数据并行训练
 - deepseed的zero范式和accelerate加速
-
-实战[lava_fitune](https://github.com/Aorunfa/llava_finetune)，我从llava将上述方法单独列出，进行了微小的改动，特别针对fsdp和ddp写了一版训练代码，方便快速理解训练实现细节
 
 ---
 
@@ -323,8 +322,8 @@ llava是学习如何使用transformer库进行大模型训练的好的范式，�
 
 ## (四)Hiera MAE自监督预训练
 > 引子：之所以把hiera加进来，是由于其用到了MAE的高效自监督训练方法理解图片结构信息，同时sam2也以hiera作为高效特征提取器
-
-[hiera](https://github.com/facebookresearch/hiera)第一个特点是优化了传统vit结构在特征分辨率始终如一的特性，使用了池化的方式减小深层的特征的分辨率，提高了参数利用率(可以类比于经典高效卷积结构大多是多层级的分辨率特征图进行组合)，第二是采用了[mask-auto-encoder](https://github.com/facebookresearch/mae)的自监督方法进行预训练  
+* [hiera](https://github.com/facebookresearch/hiera)第一个特点是优化了传统vit结构在特征分辨率始终如一的特性，使用了池化的方式减小深层的特征的分辨率，提高了参数利用率(可以类比于经典高效卷积结构大多是多层级的分辨率特征图进行组合)
+* 第二是采用了[mask-auto-encoder](https://github.com/facebookresearch/mae)的自监督方法进行预训练  
 hiera更轻量，微调下游任务效果更好，官方主要针对imgnet1k分类和k-400视频动作的分类进行了微调。论文解读可以参照[Hiera笔记](https://zhuanlan.zhihu.com/p/719060883)
 
 <div align="center">
@@ -332,23 +331,24 @@ hiera更轻量，微调下游任务效果更好，官方主要针对imgnet1k分�
   <p style="font-size: 10px; color: gray;">hiera思路(搬运自Hiera)</p>
 </div>
 
-#### hiera 特征提取器
-  * 结构设计总体思路
-    > * 浅层layer使用高分辨率和小特征维度，深层特征使用低分辨率和大特征维度
-    > * 使用maxpool进行特征图下采样
-    > * 前两阶段使用局部注意力机制（mask unit window），后两个阶段使用全局注意力机制
+### 特征提取器
+  * 浅层layer使用高分辨率和小特征维度，深层特征使用低分辨率和大特征维度
+  * 使用maxpool进行特征图下采样
+  * 前两阶段使用局部窗口注意力机制（mask unit window），后两个阶段使用全局注意力机制
   
-#### MAE 训练方式
+### MAE训练方式
 该方法主要是随机遮掩图片的patch窗口，将未遮掩的patch窗口拼接，送入encoder进行编码，再由decoder预测出被mask掉的patch窗口，mask的patch窗口的真值和预测值最后会由一个nn.Linear层将特征维度映射到超高维度，使用MSE损失度量分布差异
-* mask生成: 计算遮掩给定大小连续patch的方阵(mask_unit)后得到的特征图分辨率，基于该分辨率随机mask给定比例的点，保证batch内的每一个图mask的比例相同，才能进行min-batch training
-* 损失计算
-  * encoder得到没有被mask掉的patch特征
-  * 恢复到原来的patch排列顺序，mask区域填充可学习参数，非mask区域填充encoder得到的特征
-  * 送入vit decoder得到最后的pred
-  * 标签产生，对原始图片按照最终的下采样stride分块，块状内的channel展平，对齐pred的特征空间维度。筛选出被mask掉的区域
-  * 通过线性层间预测值与真值的特征维度映射到超高维度(65535), 使用均方误差计算pred和label的差异
 
-#### 实战
+* mask生成: 计算遮掩给定大小连续patch的方阵(mask_unit)后得到的特征图分辨率，基于该分辨率随机mask给定比例的点，保证batch内的每一个图mask的比例相同，才能进行min-batch training
+
+* 损失计算
+  > * encoder得到没有被mask掉的patch特征
+  > * 恢复到原来的patch排列顺序，mask区域填充*可学习参数*，非mask区域填充encoder得到的特征
+  > * 送入vit decoder得到最后预测输出
+  > * 获得标签，对原图片按照最终的下采样stride分块，块状内的channel展平，对齐预测输出的特征空间维度，筛选出被mask掉的区域
+  > * 通过线性层间预测值与真值的特征维度映射到超高维度(65535), 使用均方误差计算pred和label的差异
+
+### 实战: MAE自监督预训练一个Hiera和视频分类微调
 Hiera的代码在maxpool的操作上极难读懂，但实战只需要知道函数功能即可
 Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训练代码，可以参照[hiera_finetune](https://github.com/Aorunfa/hiera_finetune)，同样只需要少量数据和资源进行快速复现
 
