@@ -58,7 +58,7 @@
 
 * 预测阶段，与rnn相同，transformer自回归预测下一个token，当出现终止符则停止
   
-**论文[attendion all you need](https://arxiv.org/abs/1706.03762)**，论文模型结构为encoder-decoder的结构，基于两个组件所衍生的自然语言经典模型见第四节
+**[论文](https://arxiv.org/abs/1706.03762)**，模型结构为encoder-decoder的结构，基于两个组件所衍生的自然语言经典模型见第四节
 
 # 三. 代码解读
 根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的`ouput_head`是一个单独的线性层，与embeding层不共享权重。
