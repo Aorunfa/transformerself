@@ -48,12 +48,10 @@
 **论文[attendion all you need](https://arxiv.org/abs/1706.03762)**，论文模型结构为encoder-decoder的结构，基于两个组件所衍生的自然语言经典模型见第四节
 
 # 三. 代码解读
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的`ouput_head`是一个单独的线性层，与embeding层不共享权重。
 
-# 四. 经典自然语言transformer
 
+# 四. 经典自然语言transformer
 ## (一)GPT
 * 介绍: decoder-only结构，通过mask self-attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如：问答，机器翻译，摘要生成，音乐生成等。
 
@@ -444,7 +442,7 @@ ongoing...
 
   量化的另一种方式是使用chunck内的数值分布，对应高斯分布，量化参数取分位数，缩放参数为对应的高斯分布分位数对应的数值
 
-  反量化的简单原理，e.g fp8反量化为fp16：W_dequant = W * W.s，存储为fp16精度
+  反量化的简单原理，e.g fp8反量化为fp16：W_dequant = W * W.scale，存储为fp16精度
 
   *使用triton编写量化内核的实战，可以参照我对deepseekV3推理代码的解读[deepseek_learning](https://github.com/Aorunfa/deepseek_learning)*
 
