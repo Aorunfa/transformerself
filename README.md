@@ -25,7 +25,12 @@
   - [Hiera](##(四)HieraMAE自监督预训练)
     - [实战: MAE自监督预训练一个Hiera]()
 - [模型压缩](#六-模型压缩)
+  - [蒸馏](##蒸馏)
+  - [量化](##量化)
 - [附录](#附录)
+  - [RNN](##RNN)
+  - [模型组件](##模型组件)
+  - [模型降显存](##模型降显存)
 
 # 二. 论文原理
 <div align="center">
@@ -431,7 +436,7 @@ Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训�
 #### *远程衰减性的证明：随着相对距离变大，qk^T的权重应该是下降*  
 原始论文通不等式转换，在进行旋转位置编码后计算q*k^T的注意力分数是一个与相对距离有关的分数，其最大值存在远程衰减性。这一性质使得注意力计算中更加关注邻近token
 <div align="center">
-  <img src="doc/rope_decay.png" alt="rope" width="450" height="250">
+  <img src="doc/rope_decay.png" alt="rope" width="550" height="300">
   <p style="font-size: 10px; color: gray;">注意力上限衰减曲线</p>
 </div>
 
