@@ -15,7 +15,7 @@
     - [实战: 中文摘要总结]()
   - [DeepseekV3](##(四)DeepseekV3-decoder-only-推理训练低成本怪物)
     - [实战: V3技术分析]()
-- [进阶-经典视觉transformer](#五-进阶-经典视觉transformer)
+- [经典视觉transformer](#五-经典视觉transformer)
   - [Clip](##(一)Clip-对比学习弱监督)
     - [实战: 对比学习从头训练clip]()
   - [LLaVa](##(二)LLaVA-adapter高效多模态指令对齐)
@@ -199,7 +199,7 @@ dpo从ppo总体优化目标的三个原则出发```模型输出尽可能接近�
 
 ---
 
-# 五. 进阶-经典视觉transformer
+# 五. 经典视觉transformer
 这一章介绍tranformer在视觉领域的经典应用，能够快速上手新的视觉项目。
 
 ## (一)Clip 对比学习弱监督
@@ -228,24 +228,40 @@ clip实现vit，以224×224特征、32×32patch size为例:
   * ...
 
 #### 实战
-CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程。  
-Clip官方repo没有开源训练代码，不太好理解算法实现的具体细节，为此我结合[open_clip](https://github.com/mlfoundations/open_clip)，写了一版clip训练代码，可以参照[clip_finetune](https://github.com/Aorunfa/clip_finetune)，只需要少量数据和资源进行快速复现，方便快速理解算法设计细节
+实战[clip_finetune](https://github.com/Aorunfa/clip_finetune)，CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程。  
+clip官方repo没有开源训练代码，不太好理解算法实现的具体细节，为此我结合[open_clip](https://github.com/mlfoundations/open_clip)，增加了clip训练代码，只需要少量数据和资源进行快速复现，方便快速理解算法设计细节
 
 ---
 
 ## (二)LLaVA adapter高效多模态指令对齐
-llava更新了三个版本v1、v1.5、v1.6。整体结构为使用vit作为vison-encoder，权重初始化自clip，使用预训练的llama作为text decoder，中间设置一个adapter，将vison token对齐到text token的embedding向量空间。    
+llava更新了三个版本v1、v1.5、v1.6。整体结构为使用vit作为vison-encoder，权重初始化自clip，使用预训练的llama作为text decoder，中间设置一个adapter，将vison token对齐到text token的embedding向量空间。   
 在vison token featuer 前后增加特殊的图片开始和结束标志位，和text token完成特征拼接。   
-llava的优势在于，使用的训练数据极少，完整的训练时间非常短，8A100一天完成训练。   
 
-> **llava-v1**的adapter设置为一个简单的投影矩阵（单linear层）完成对齐，输入图像分辨率为224。
+**llava的优势在于，使用的训练数据极少，完整的训练时间非常短，8×A100一天完成训练**
 
-> **llava-1.5**的adaptr设置为一个两层的MLP层完成对齐，vison encoder使用更大的clip vit模型，输入图像分辨率为336，同时prompt中设定短答案输出的格式，提高短输出benchmark的准确度
+<div align="center">
+  <img src="doc/llava.png" alt="lora" width="718" height="240">
+  <p style="font-size: 10px; color: gray;">llava 结构</p>
+</div>
 
-> **llava-1.6**从源码看来，是对论文中llava-1.5=HD的实现。使用224分辨力的clip作为vision encoder。对高分辨率的图片resize并padding到预设高分辨率，将图片等分为四个区域加上一张原始resize图片(224的分辨率)，分布进行encoder后完成拼接，得到token featuer
+> **llava-v1**
+> * adapter设置为一个简单的投影矩阵（单linear层）完成对齐，输入图像分辨率为224。
+
+> **llava-1.5**
+> * adaptr设置为一个两层的MLP层完成对齐，vison encoder使用更大的clip vit模型，输入图像分辨率为336
+> * 同时prompt中设定短答案输出的格式，增加固定尾缀，提高短输出benchmark的准确度。
+
+<div align="center">
+  <img src="doc/llava-1.6.png" alt="lora" width="834" height="276">
+  <p style="font-size: 10px; color: gray;">llava-1.6 patch process</p>
+</div>
+
+> **llava-1.6**
+> * 从源码看来，是对论文中llava-1.5-HD的实现。使用224分辨力的clip作为vision encoder。
+> * 对高分辨率的图片resize并padding到预设高分辨率，将图片等分为四个区域加上一张原始resize图片(224的分辨率)，分别进行encoder后完成拼接，得到vison token
 
 ### 训练
-训练包括两个阶段，全程冻结vison encoder，第一阶段只训练adapter，完成模态对齐。第二阶段训练adaper和llm，完成指令微调。  
+训练包括两个阶段，全程冻结vison encoder，第一阶段只训练adapter，完成模态对齐。第二阶段训练adaper和llm，完成指令微调
 
 ### 实战
 llava是学习如何使用transformer库进行大模型训练的好的范式，可以从这个项目中提取以下训练方法
@@ -255,7 +271,7 @@ llava是学习如何使用transformer库进行大模型训练的好的范式，�
 - fsdp分布式数据并行训练
 - deepseed的zero范式和accelerate加速
 
-我从llava将上述方法单独列出，进行了微小的改动，特别针对fsdp写了一版训练代码，方便快速理解训练实现细节，实战项目[lava_fitune](https://github.com/Aorunfa/llava_finetune)
+实战[lava_fitune](https://github.com/Aorunfa/llava_finetune)，我从llava将上述方法单独列出，进行了微小的改动，特别针对fsdp和ddp写了一版训练代码，方便快速理解训练实现细节
 
 ---
 
