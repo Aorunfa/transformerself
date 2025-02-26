@@ -106,7 +106,7 @@
 
 *以下着重对lora微调进行详细介绍，其他微调方法只做简单说明* 
 
-#### 低秩矩阵自适应微调 lora
+#### 01低秩矩阵自适应微调 lora
   [lora](https://arxiv.org/abs/2106.09685)微调是大模型最常用的微调手段，本质是对linear层进行调整，如可学习矩阵**W（Wq Wk Wv Wo ...）**，但不直接对其进行训练，而是使用类似残差连接并控制训练参数自由度的方式进行训练，基本公式为如下
   <div align="center">
     <img src="doc/lora.png" alt="lora" width="280" height="40">
@@ -119,7 +119,7 @@
   相比全量微调lora需要的显存大大减小，但在小模型上训练速度不一定更快
   > 小模型forward过程耗时占比增加，占大部分计算量
 
-#### 其他微调方法
+#### 02其他微调方法
 * 全量微调: 使用预训练模型权重进行初始化，使用较小的学习率对模型的全部参数进行训练
 * PreEmbed: 只微调token embedding参数矩阵，适应新的数据分布
 * Prompt tuning: 在输入token前增加特殊的提示token，只微调提示token的embeding向量参数，适合小模型适配下游任务
@@ -143,41 +143,41 @@
 ##### 02DPO
 直接偏好优化 direct preference opimized，与PPO不同，直接跳过了奖励模型的训练，根据偏好数据一步到位训练得到对齐模型。[论文](https://arxiv.org/abs/2305.18290)解读可以参考博客[人人都能看懂的DPO数学原理](https://mp.weixin.qq.com/s/aG-5xTwSzvHXN4B73mfKMA)  
 
-DPO从ppo总体优化目标的三个原则出发```模型输出尽可能接近偏好标签，尽可能偏离非偏好标签，尽可能少偏离原模型输出```，推导最优奖励模型的显式解，代入奖励模型的损失函数，得到一个只与待训模型有关的损失函数，该函数就是偏好优化的目标。 
+DPO从PPO总体优化目标的三个原则出发```每一步更新，模型输出尽可能接近偏好标签，尽可能偏离非偏好标签，尽可能少偏离原模型输出```，推导最优奖励模型的显式解，代入奖励模型的损失函数，得到一个只与待训模型有关的损失函数，该函数就是偏好优化的目标
 
-筒体而言就是理论推到了一个损失函数，用这个损失函数微调模型
-
+筒体而言就是理论推到了一个损失函数，用这个损失函数和给定的偏好数据微调模型
 > 手撕dpo训练代码可以参考本仓库的`/minimind/5-dpo_train_self.py`，前提要先自己捋一遍minimind
 
-#### 4. evalization
+### 4.效果评估
 ... pending 不同的任务评价指标不同，需要系统梳理多任务类型才能进阶
 
 ----
   
 ## (二)Bert
-* 介绍: encoder-only结构，只包含transform encoder部分。self-attendtion保证每个tokend都可以看到上文和下信息，输出与句子整体语义相关，无法自回归预测next token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类, 多选问答，抽取问答...)，序列标注（词性标注 邮寄地址信息提取）, 语义相似度... 对于bert的解读可以参考[链接](https://github.com/datawhalechina/learn-nlp-with-transformers)
+* 介绍: encoder-only结构，只包含transformer的encoder。self-attendtion中每个tokend都可以看到上文和下信息，输出与句子整体语义和token序列相关，无法自回归预测下一个token。适用于输出为类别、数值的所有sep2sep，sep2val任务，如: 分类问题(情感分类，邮件分类, 多选问答，抽取问答...)，序列标注（词性标注 邮寄地址信息提取）, 语义相似度... 对于bert的解读可以参考[链接](https://github.com/datawhalechina/learn-nlp-with-transformers)
 
-* 预训练: 采用mask language和相邻句子判断的方式进行预训练。  
-  > * mask language随机遮掩token(15%, 其中10%被随机替换为其他token, 5%为统一替换为mask token)，输出预测被遮掩的token，通过这种挖词填空促使模型也能理解上下文信息；
+* 预训练: 采用mask language和相邻句子判断的方式进行预训练
+  > * mask language训练方式随机遮掩token(10%被随机替换为其他token, 5%为统一替换为mask token)，对齐被遮掩的token输出预测和真值。通过这种挖词填空促使模型也能理解上下文信息
    
-  > * 相邻句子判断，需要将输入划分为句子+分隔标记+下一句子，通过CLS位置的输出进行分类监督, 使模型能够理解上下句的关联。这个训练步骤在后续的研究中逐渐淡化。  
+  > * 相邻句子判断，将输入划分为句子+分隔标记+下一句子，通过CLS位置的输出进行分类监督, 使模型能够理解上下句的关联。这个训练步骤在后续的研究中逐渐淡化，估计是没啥大用
   
-  > * 特殊输入标记包括，类别标记`[CLS]`，句子分隔标记`[SEP]`，遮掩token标记`[MASK]`。`[CLS]`标记标记主要用于提取句子的整体语义，后续作文下游分类头的输入，也可用于语义相似度。  
+  > * 特殊输入标记包括，类别标记`[CLS]`，句子分隔标记`[SEP]`，遮掩token标记`[MASK]`。`[CLS]`标记标记主要用于提取句子的整体语义，后续作为下游分类头的输入，也可用于语义相似度
   
-  > * embedding由三类向量相加：`embeddings = words_embeddings + position_embeddings + token_type_embeddings`，token_type区分上句或下句，三者都是可学习参数，形状分别为`(voc_size, d_model), (max_len, d_model), (2, d_model)`。相加的含义可以用one-hot编码就行解释，等同于`onehot[word-hot, pos-hot, type-hot] * [W_word, W_pos, W_type]`。
+  > * embedding由三类向量相加：`embeddings = words_embeddings + position_embeddings + token_type_embeddings`，token_type区分上句或下句，三者都是可学习参数，形状分别为`(voc_size, d_model), (max_seq_len, d_model), (2, d_model)`。相加的含义可以用one-hot编码就行解释，等同于`onehot[word-hot, pos-hot, type-hot] * [W_word, W_pos, W_type] ^ T`，本质是一个查询操作
 
   > * 位置编码由上面的position_embeddings完成，为可学习参数
   
-  > * padding mask区分实际token和padding token，用于在softmax中归零padding token的权值，例如一个token查到paddingtoken，计算得到的注意力权重应该为总是0。
+  > * 对于输入截长补短产生的padding mask区分实际token和padding token，用于在softmax中归零padding token的注意力得分，例如一个token查到padding token，计算得到的注意力权重应该为总是0
 
-* 微调: 以bert作为backbone增加输出头，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果。
+* 微调: 以bert作为backbone增加输出头，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果
 
-* 实战bert中文地址分类:见本仓库`/Bert-Chinese-Email-Addresses-Classification`，适用地址文本解析，快速理解整个bert模型结构，微调数据的加载方式和训练过程。参考于项目[bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)
+### 实战: 中文地址分类
+项目见本仓库`/Bert-Chinese-Email-Addresses-Classification`，适用地址文本解析，快速理解整个bert模型结构，微调数据的加载方式和训练过程。参考于项目[bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)
   
-## (三)T5 encoder-decoder 集大成者，统一NLP任务
-* 介绍: encoder-decoder结构，使用完整的transform结构，统一的text-to-text框架，适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[论文解读](https://zhuanlan.zhihu.com/p/89719631)
+## (三)T5
+* 介绍: encoder-decoder结构，使用完整的transformer结构，统一的text-to-text框架，两个组件的特点决定了其适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[论文解读](https://zhuanlan.zhihu.com/p/89719631)
   
-  一些结构差异说明：
+  一些结构差异说明:
   
   > * 共享的相对位置编码：在attention的`qi * kj^T`计算得到的logits加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数。[详解](https://blog.csdn.net/qq_44665283/article/details/140526203)
   > * Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。大白话就是将input[:-1]作为输入，input[1:]作为标签，t5的预训练使用这种，**而不是bert输出与输入的位置对应**。
