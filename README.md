@@ -1,5 +1,4 @@
 # 一. 介绍
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 * 一个用于学习基于transformer的nlp和vit模型的菜鸟仓库，介绍模型原理，训练步骤，微调方法等
 * 分享能快速理解并上手的代码实战项目（或推荐、或开发）
 * 适用于具备一定torch基础、想要快速入门transform、想要能够阅读代码并二次开发的同学
