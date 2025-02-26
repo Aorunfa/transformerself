@@ -447,11 +447,11 @@ ongoing...
   反量化的简单原理，e.g fp8反量化为fp16：W_dequant = W * W.s，存储为fp16精度
 
   *使用triton编写量化内核的实战，可以参照我对deepseekV3推理代码的解读[deepseek_learning](https://github.com/Aorunfa/deepseek_learning)*
-  
+
 ### 2. 双重量化lora微调 q-lora
   [Qlora](https://arxiv.org/pdf/2305.14314)本质上是一个nf4的模型双重量化，权重微调方法使用lora   
-  第一次使用fp8对模型权重进量化，得到量化后的权重和分位数缩放系数矩阵；第二次使用nf4对量化后的权重进行第二次量化   
-  增加了attention分页优化策略。牺牲计算的效率换显存，适用单卡多卡环境    
+  第一次使用fp8对模型权重进量化，得到量化后的权重和分位数缩放系数矩阵   
+  第二次使用nf4对量化后的权重进行第二次量化增加了attention分页优化策略。牺牲计算的效率换显存。
 
 ### 3. Fsdp 
   FSDP是DDP的显存优化版本，将指定层的参数进行分片，共享给多个GPU，降低显存，但计算时需要聚合所有分片，增加通信开销   
