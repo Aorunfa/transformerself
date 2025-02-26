@@ -71,11 +71,11 @@
 * 微调: 采用sft监督指令微调，对每一条input-output数据对处理为特殊问答模版，只对output对应的输出进行监督，使得模型能够理解输出的模版指向，具备指令遵循的能力
 * 偏好对齐：采用RLHF的PPO或DPO对齐模型输出偏好，原来的技术报告使用的是PPO算法进行偏好微调 
 
-### 实战-完整训练一个GPT的问答模型为例
-重点介绍llm模型训练流程及相关的方法，推荐根据轻量化llm项目完整过一遍对话模型的开发[Minimind](https://github.com/jingyaogong/minimind)
+### 实战: 完整训练一个GPT的问答模型
+这一节重点介绍llm模型训练流程及相关的方法，推荐根据轻量化llm项目完整过一遍对话模型的开发[Minimind](https://github.com/jingyaogong/minimind)
 > 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batch_size设置为1可以吃得消
 <div align="center">
-  <img src="doc/minimind_arc.png" alt="minimind 结构" width="644" height="412">
+  <img src="doc/minimind_arc.png" alt="minimind 结构" width="600" height="400">
   <p style="font-size: 10px; color: gray;">minimind项目decoder-only结构</p>
 </div>
 
@@ -83,10 +83,10 @@
 
 #### 1.预训练
 * 预训练 prtrained，的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字依次接龙成符合逻辑的一段话
-* prtrained的输入是`input_ids[:-1]`， 标签是`input_ids[1:]`，input_ids是指文字经过tokenize后的id列表，如`我爱你 -转换-> <s>我爱你<\s> -映射-> [1, 2, 23, 4, 2]`
-  * 之所以输入与标签要错一位，目的在于实现预测下一个token的监督学习，例如输入文字是”我爱你啊“， 那么预测下一个token逻辑是`我 --预测--> 爱; 我爱 --> 你；我爱你 --> 啊`
-  * 使用mask能对信息进遮掩，确保每个位置只能看到上文信息，实现训练并行，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的`ouput[0]`则由`<s>`预测得到。
-  * 这里的训练并行可以与RNN的训练串行进行对比，RNN训练则需要依次次输入`x我y爱，x我爱y你，x我爱你y啊`，只是中间有一个隐态传递过程
+* prtrained的输入是`input_ids[:-1]`，标签是`input_ids[1:]`，input_ids是指文字经过tokenize后的id列表，id是文字在词表中的index映射，如`我爱你 --转换--> <s>我爱你<\s> --id映射--> [1, 2, 23, 4, 2]`
+  * 之所以输入与标签要错开一位，目的在于实现预测下一个token的监督学习。例如输入文字是‘我爱你啊’，那么预测下一个token逻辑是`我 --预测--> 爱; 我爱 --预测--> 你；我爱你 --预测--> 啊`，第i个标签有前面i-1个输入预测得到
+  * 使用casual mask能对信息进行遮掩，确保每个位置只能看到上文信息，实现训练并行，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的`ouput[0]`则由`<s>`预测得到
+  * 这里的训练并行可以与RNN的训练串行进行对比。RNN训练则需要依次次输入`x我y爱，x我爱y你，x我爱你y啊`，只是中间有一个隐态传递过程
 
 * prtrained的损失函数为corss_entropy，模型输出的logits维度为`(batch_size, max_seq_length, voc_size)`, `max_seq_length`为对文本截长补短的最大长度，`voc_size`为词表的token数量。损失计算的逻辑为对logits沿最后的轴进行softmax得到几率，形状不变；沿着max_seq_length取出label对应的token_id计算corss_entropy；由于所有label的真实长度不一定为max_seq_length，对短的label需要补全一个padding占位，才能进行mini-batch训练，因此需要设置一个真实token_id的mask标记真实需要进行损失计算的label元素。
 
