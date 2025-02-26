@@ -179,58 +179,59 @@ DPO从PPO总体优化目标的三个原则出发```每一步更新，模型输�
   
   一些结构差异说明:
   
-  > * 共享的相对位置编码：在attention的`qi * kj^T`计算得到的logits加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数。[详解](https://blog.csdn.net/qq_44665283/article/details/140526203)
-  > * Teacher Forcing的训练策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。大白话就是将input[:-1]作为输入，input[1:]作为标签，t5的预训练使用这种，**而不是bert输出与输入的位置对应**。
+  > * 共享的相对位置编码: 在attention层的计算注意力权重`qi * kj^T`上加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数，通过可学习的相对偏置表征相对位置 [详解](https://blog.csdn.net/qq_44665283/article/details/140526203)
+  > * Teacher Forcing的训练策略: 训练gpt输入和输出的匹配策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。大白话就是将input[:-1]作为输入，input[1:]作为标签，t5的预训练使用这种，**而不是bert输出与输入的位置相对应**
 
-* 预训练：训练方法选择 mask-and-mask-ratio、prefix的text2text方法
-  > * prefix的text2text框架，将所有的任务通过prefix进行表示，标签统一转换为prefix+文本到prefix+文本的形式，见微调的例子
-  > * 预训练方式：采用bert风格掩码语言模型的训练方式，预测mask的部分。实验对照：自回归式、文本打乱还原式
-  > * 破坏方式：采用replace span，replace连续的token并打上唯一标记，target为`(唯一标记 + mask内容) * n + 终止符号`，可加速训练。对照：bert的mask方式，随机丢弃
-  > * 破坏比例：采用15%的破坏比例。
-  > * 遮掩span长度：采用3的span长度。
-  > * 多任务加微调策略：**无监督数据里面混入一定比例的多任务的有监督数据**，有监督数据的构造方式同finetune中text2text输入输出格式。与加入多任务数据数据预训练差不多，但最后采用的原因是可以监督下游多任务的性能。
+* 预训练: 选择mask-and-mask-ratio、prefix的text2text方法
+  > * prefix的text2text框架: 将所有的任务通过prefix进行表示，标签统一转换为prefix+文本到prefix+文本形式，见微调的例子
+  > * 预训练方式: 采用bert风格掩码语言模型的训练方式，预测mask的部分。(实验对照: 自回归式、文本打乱还原式)
+  > * 破坏方式：采用replace span，replace连续的token并打上唯一标记，target为`(唯一标记 + mask内容) * n + 终止符号`，可加速训练，n为replace个数。(实验对照：bert的mask方式，随机丢弃)
+  > * 破坏比例：采用15%的破坏比例
+  > * 遮掩span长度：采用3的span长度
+  > * 多任务加微调策略：**无监督数据里面混入一定比例的多任务的有监督数据**，有监督数据的构造方式同微调中text2text输入输出格式。与加入多任务数据数据预训练差不多，但最后采用的原因是可以监督下游多任务的性能
   
 * 微调：全量，逐步解冻，adapter
-  > * text2text输入输出格式: 输入为`任务类型prefix + input; 目标prefix + target`，如翻译任务将输入`{'en': 'That is good', 'ge': 'Das ist gut'}`转换为`{'input': 'translate English to German: That is good', 'target': 'Das ist gut'}`最终合并为prefix标注输入`translate English to German: That is good. target: Das ist gut`。对于其他任务的转换形式见论文附录D。
+  > * text2text输入输出格式: 输入为`任务类型的prefix + input; 目标prefix + target`，如翻译任务将数据`{'en': 'That is good', 'ge': 'Das ist gut'}`转换为`{'input': 'translate English to German: That is good', 'target': 'Das ist gut'}`最终合并为prefix标注输入`translate English to German: That is good. target: Das ist gut`。对于其他任务的转换形式参考论文
   > * 还是全量微调更胜一筹，逐步解冻次之
 
-* 实战：中文文本摘要总结实战，见目录`/T5-pegasus-chinese`，训练loss和case大致符合预期
-  > * greedy-decoding vs beam-search：两者适用于自回归场景。
-  > * greedy-decoding，每次选择概率最大的token作为下一个输入。
-  > * beam-search，设定beam size为k, 第一次回归选择top k的输出token作为k个波束序列, 下一次依次对k个波束进行自回归，得到k*k个波束，按照token的累乘或平均logit保留top k的波束序列，依次往后执行k个波束的自回归和排序过滤操作。保证模型每次回归只执行k次推理。一般用于翻译和摘要输出。
+### 实战: 中文摘要总结
+项目见目录`/T5-pegasus-chinese`，训练loss和case大致符合预期，
+  * 这里强调解码方法 greedy-decoding vs beam-search，两者都适用于自回归场景
+  > * greedy-decoding，每次选择logits最大的token作为下一个输入
+  > * beam-search，设定beam size为k, 第一次回归选择top k的输出token作为k个波束序列, 下一次依次对k个波束进行自回归，得到k*k个波束，按照token的累乘或平均logit保留top k的波束序列，依次往后执行k个波束的自回归和排序过滤操作。保证模型每次回归只执行k次推理。用于翻译和摘要输出可以提高回答质量
 
-## (四)DeepseekV3 decoder-only 推理训练低成本怪物
+## (四)DeepseekV3 
+decoder-only的MOE架构，推理训练低成本怪物
 * 具体的技术点解读和代码注释，参照我的另一个仓库[deepseek_learning](https://github.com/Aorunfa/deepseek_learning)
 
 ---
 
 # 五. 经典视觉transformer
-这一章介绍tranformer在视觉领域的经典应用，能够快速上手新的视觉项目。
+这一章介绍tranformer在视觉领域的经典应用，并开发分享能够快速上手新的视觉项目，理解模型结构和相关操作
 
 ## (一)Clip 对比学习弱监督
-[clip](https://github.com/openai/CLIP)作为多模态的早期经典之作，主要通过对齐文本编码和图片编码，让模型能够匹配图片和给定文本，或匹配文本和给定的图片。主要适用视觉表征、文本到图片或图片到文本的匹配场景。特别地，clip预训练使用的大多是图片类别文本，我理解更适用以物体文本搜图。
-
+[clip](https://github.com/openai/CLIP)作为多模态的早期经典之作，主要通过对齐文本编码和图片编码，让模型能够匹配图片和给定文本，或匹配文本和给定的图片。主要适用视觉表征、文本到图片或图片到文本的匹配场景。特别地，clip预训练使用的大多是图片类别文本，我理解更适用以物体文本搜图
 <div align="center">
   <img src="doc/clip_alg.png" alt="clip" width="606" height="220">
   <p style="font-size: 10px; color: gray;">clip思路(搬运自CLIP)</p>
 </div>
 
-#### 预训练总体思路：
-  * 文本编码器使用类似带casual-mask的transformer结构，对文本最后添加一个结束符`=`，使用因果mask的注意力机制，经过transform后取结束符对应的编码表征文本信息
-  * 图片编码器使用经典vit(和resnet)，通过卷积划分不重叠的patch，展平，在开头添加一个cls token对应的embedding, 再喂入带self-attention的transform，提取cls对应的嵌入向量表征图片信息
-  * 损失计算，对batch内的图片向量组和文本向量组，进行两两组合计算相似度，最大化数据集中对应的图片-文本的相似度
+* 预训练
+  > * 文本编码器使用类似带casual-mask的transformer结构，对文本最后添加一个结束符`=`，使用因果mask的注意力机制，经过transform后取结束符对应的编码表征文本信息
+  > * 图片编码器使用经典vit，通过卷积划分不重叠的patch，展平，在开头添加一个cls token对应的可学习embedding向量, 输入attention encoder层，提取cls对应的嵌入向量表征图片信息
+  > * 损失计算，对batch内的图片向量组和文本向量组，进行两两组合计算相似度，最大化batch中对应的图片-文本的相似度
 
-clip实现vit，以224×224特征、32×32patch size为例:
-  > * 以32×32kernal大小，32stride，输出channel为3，输出channel为d_model的卷积核完成patch划分和特征提取，得到形状为(7,7, d_model)特征图，展平为(49, d_model)的token_embeding矩阵
+* 举例: clip实现vit，以224×224图片、32×32的patch size为例:
+  > * 以32×32kernal大小，32stride，输入channel为3，输出channel为d_model的卷积核完成patch划分和特征提取，得到形状为(7,7,d_model)特征图，展平为(49, d_model)的token_embeding矩阵
   > * 在的token_embeding矩阵的首行嵌入一行CLS向量，用于表征整个图片的特征，向量参数为可学习参数，token_embeding最后形状为(50, d_model)
-  > * position embeding采用可学习参数
-  > * 经过transform后提取CLS向量对应的特征向量，通过一个前馈网络将特征维度对齐的到文字的特征维度`nn.Linear(oupt_dim, d_model), d_model for text`表示图片的分类特征
+  > * 位置编码的position embeding采用可学习参数
+  > * 经过encoder后提取CLS向量对应的特征向量，通过一个前馈网络将特征维度对齐的到文字的特征维度`nn.Linear(oupt_dim, d_model)`表示图片的语义特征
 
-#### 一些后续泛化工作
-  * [Blip](https://github.com/salesforce/BLIP)，增加图片caption、qa能力
-  * [LLaVA](https://github.com/haotian-liu/LLaVA)，clip visual enoder + llm，高效对齐多模态指令遵循
-  * [DALL-E](https://github.com/openai/DALL-E)，增加基于VAE的文本到图片的生成
-  * ...
+* 一些后相关续泛化工作
+  > * [Blip](https://github.com/salesforce/BLIP)，增加图片caption、qa能力
+  > * [LLaVA](https://github.com/haotian-liu/LLaVA)，clip vision enoder + adaper +llm，高效对齐多模态指令遵循
+  > * [DALL-E](https://github.com/openai/DALL-E)，增加基于VAE的文本到图片的生成
+  > * ...
 
 #### 实战
 实战[clip_finetune](https://github.com/Aorunfa/clip_finetune)，CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程。  
