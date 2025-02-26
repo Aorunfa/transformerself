@@ -66,21 +66,14 @@
 
 # 四. 经典自然语言transformer
 ## (一)GPT
-* 介绍: decoder-only结构，通过mask self-attention保证每个token只能看到上文信息，输出自回归预测下一个token。适用与输出为下一个关联token的所有sep2sep任务，如：问答，机器翻译，摘要生成，音乐生成等。
+* 介绍: decoder-only结构，通过self-attention的casual mask保证每个token只能看到上文信息，输出自回归预测下一个token。适用于输出为下一个关联token的所有sep2sep任务，如：问答，机器翻译，摘要生成，音乐生成等
+* 预训练: 采用自回归语言模型训练方式，训练目标为预测下一个token，即输入是一段文本，输出是下一个文字，基于casual mask实现并行训练
+* 微调: 采用sft监督指令微调，对每一条input-output数据对处理为特殊问答模版，只对output对应的输出进行监督，使得模型能够理解输出的模版指向，具备指令遵循的能力
+* 偏好对齐：采用RLHF的PPO或DPO对齐模型输出偏好，原来的技术报告使用的是PPO算法进行偏好微调 
 
-* 预训练: 采用自回归语言模型训练方式，训练目标为预测下一个token，即输入是一段文本，输出是下一个文字。
-
-* 微调: 采用sft监督指令微调，对每一条input-out数据对处理为特殊问答模版input进行自回归训练
-
-* 偏好对齐：采用RLHF的PPO或DPO对齐模型输出偏好 
-
-### 实战重点介绍llm模型训练流程及方法 - 以完整训练一个GPT的问答模型为例
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-推荐根据轻量化llm项目完整走一遍对话模型的开发[Minimind](https://github.com/jingyaogong/minimind)。
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-> 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batch_size设置为1可以吃得消。
-
+### 实战-完整训练一个GPT的问答模型为例
+重点介绍llm模型训练流程及相关的方法，推荐根据轻量化llm项目完整过一遍对话模型的开发[Minimind](https://github.com/jingyaogong/minimind)
+> 只要求跑通进行代码阅读的情况下，4Gb显存的卡将batch_size设置为1可以吃得消
 <div align="center">
   <img src="doc/minimind_arc.png" alt="minimind 结构" width="644" height="412">
   <p style="font-size: 10px; color: gray;">minimind项目decoder-only结构</p>
@@ -88,9 +81,8 @@
 
 ---
 
-#### 1. Pretrained 预训练
-* prtrained的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字输出符合逻辑的话一段话，简而言之就是下一个字接龙。
-
+#### 1.预训练
+* 预训练 prtrained，的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字依次接龙成符合逻辑的一段话
 * prtrained的输入是`input_ids[:-1]`， 标签是`input_ids[1:]`，input_ids是指文字经过tokenize后的id列表，如`我爱你 -转换-> <s>我爱你<\s> -映射-> [1, 2, 23, 4, 2]`
   * 之所以输入与标签要错一位，目的在于实现预测下一个token的监督学习，例如输入文字是”我爱你啊“， 那么预测下一个token逻辑是`我 --预测--> 爱; 我爱 --> 你；我爱你 --> 啊`
   * 使用mask能对信息进遮掩，确保每个位置只能看到上文信息，实现训练并行，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的`ouput[0]`则由`<s>`预测得到。
