@@ -81,53 +81,60 @@
 
 ---
 
-#### 1.预训练
+### 1.预训练
 * 预训练 prtrained，的目的是让模型具备合理预测下一个token的能力，合理体现在能够根据一个字依次接龙成符合逻辑的一段话
-* prtrained的输入是`input_ids[:-1]`，标签是`input_ids[1:]`，input_ids是指文字经过tokenize后的id列表，id是文字在词表中的index映射，如`我爱你 --转换--> <s>我爱你<\s> --id映射--> [1, 2, 23, 4, 2]`
+* 预训练的输入是`input_ids[:-1]`，标签是`input_ids[1:]`，input_ids是指文字经过tokenize后的id列表，id是文字在词表中的index映射，如`我爱你 --转换--> <s>我爱你<\s> --id映射--> [1, 2, 23, 4, 2]`
   * 之所以输入与标签要错开一位，目的在于实现预测下一个token的监督学习。例如输入文字是‘我爱你啊’，那么预测下一个token逻辑是`我 --预测--> 爱; 我爱 --预测--> 你；我爱你 --预测--> 啊`，第i个标签有前面i-1个输入预测得到
   * 使用casual mask能对信息进行遮掩，确保每个位置只能看到上文信息，实现训练并行，即模型ouput中的每一个位置是由该位置之前的所有信息预测得到的, 初始的`ouput[0]`则由`<s>`预测得到
-  * 这里的训练并行可以与RNN的训练串行进行对比。RNN训练则需要依次次输入`x我y爱，x我爱y你，x我爱你y啊`，只是中间有一个隐态传递过程
+  * 这里的训练并行可以与RNN的训练串行进行对比。RNN训练需要依次次输入`(我, 爱)，(我爱, 你)，(我爱你, 啊)`，只是中间有一个隐态传递过程，而transformer只要一次性输入`(我爱你, 爱你啊)`。注意这里省略了起始和结束符号
 
-* prtrained的损失函数为corss_entropy，模型输出的logits维度为`(batch_size, max_seq_length, voc_size)`, `max_seq_length`为对文本截长补短的最大长度，`voc_size`为词表的token数量。损失计算的逻辑为对logits沿最后的轴进行softmax得到几率，形状不变；沿着max_seq_length取出label对应的token_id计算corss_entropy；由于所有label的真实长度不一定为max_seq_length，对短的label需要补全一个padding占位，才能进行mini-batch训练，因此需要设置一个真实token_id的mask标记真实需要进行损失计算的label元素。
+* 预训练的损失函数为`corss entropy`, 模型输出的形状为`(batch_size, max_seq_length, voc_size)`, `max_seq_length`为对输入文本截长补短的最大长度，`voc_size`为词表的token总数
+* 损失计算的逻辑为对输出沿最后的轴进行softmax得到logits，形状不变；沿着max_seq_length取出label对应的token_id，与logits计算损失
+* 由于所有label的真实长度不一定为max_seq_length，对短的label需要补全一个padding占位，才能进行统一的batch训练，因此需要设置一个真实token_id的mask标记真实的需要进行损失计算的label元素，过滤占位的元素
 
 ---
 
-#### 2. SFT 监督微调
-* sft监督微调的目的是让模型具备对话能力，通过将prompt嵌入问答模版，如`用户<s>说:你是谁？</s>\n助手<s>回答:我是人工智能助手</s>\n`，构成一个新的语料微调预训练模型，继续训练模型对这类模版的下一个字接龙能力。
-  
-* 对话模板通过引入特殊的字符，微调后能够让模型理解问题句柄，知道这是一个问题，从而触发预测问题后面的答案。
+### 2.监督微调
+* 监督微调 SFT, 目的是让模型能够清除知道这是在问问题，需要进行回答。
+* 监督微调的输入是将问答对嵌入问答模版，处理成标准格式。如将原始的问答对`q: 你是谁? a: 我是人工助手`，处理成
+ `用户<s>说:你是谁？</s>\n助手<s>回答:我是人工智能助手</s>\n`，构成新的语料微调预训练模型，继续训练模型对这引导模版`用户<s>说:你是谁？</s>\n助手<s>回答:`的下一个字词接龙的能力
+  * 对话模板通过引入特殊的字符，微调后能够让模型理解问题句柄，知道这是一个问题，从而触发接龙问题后面的答案，直到出现结束符合为止
 
-* sft与prtrained区别在于损失的计算以及训练的参数。
-  * sft只计算output中对应标签`回答: ***`的部分，其余部分不计入损失，但这些部分会在attention中被关注到
-  * 训练参数取决于不同的微调方法，常见 full-sft, lora, bitfit, preEmbed, prefix, adapter等
+* 监督微调与预训练的区别在于损失的计算以及训练的参数
+  * 监督微调只计算输出中对应标签`回答: ***`的部分，其余部分不计入损失，但这些部分会在attention中被关注到
+  * 训练参数取决于不同的微调方法，常见 全量微调, 低秩微调(lora), 低bit微调, 适配器对齐(adapter), preEmbed, prefix...等
 
-##### 01 full-sft 全量微调
-全量微调是指使用pretrained初始化权重，使用较小的学习率对模型的全部参数进行训练，语料设计和损失设计同上。
-  
-##### 02 lora-sft 低秩矩阵自适应微调
-  [lora](https://arxiv.org/abs/2106.09685)对可学习矩阵**W（Wq Wk Wv Wo ...）**，增加两个低秩矩阵A和B，对输入进行矩阵乘法并相加`XW + XAB = X(W + AB) = XW‘`，`W'`为更新后的参数矩阵。假设原参数矩阵W的维度为`(d_k, d_model)`, 低秩矩阵A、B维度应该满足```(dk, r) (r, d_model)```，r为秩参数，r越大则A、B参数越多，W可更新的`△W`分布自由度更大。  
-  
+*以下着重对lora微调进行详细介绍，其他微调方法只做简单说明* 
+
+#### 低秩矩阵自适应微调 lora
+  [lora](https://arxiv.org/abs/2106.09685)微调是大模型最常用的微调手段，本质是对linear层进行调整，如可学习矩阵**W（Wq Wk Wv Wo ...）**，但不直接对其进行训练，而是使用类似残差连接并控制训练参数自由度的方式进行训练，基本公式为如下
+  <div align="center">
+    <img src="doc/lora.png" alt="lora" width="280" height="40">
+  </div>
+  * linear层参数是一个shape为(in_feature, out_feature)的参数矩阵(先不考虑bias)，表示为W0
+  * A是shape为(in_feature, r)的矩阵，B是shape为(r, out_feature)的矩阵。设定r远小于out_feature，A和B为低秩矩阵，r越大，AB的参数的自由度越高
+  * α是lora_alpha，用于缩放低秩矩阵的增量，平衡每一次参数更新对原参数W0的影响
+  * "+"的方式类似残差连接的结构，保证原始模型效果不退化太大
+
   相比全量微调lora需要的显存大大减小，但在小模型上训练速度不一定更快
-  > 小模型forward过程耗时占比增加
-  
-##### 03 其他微调方法
-* PreEmbed，只微调token embedding参数矩阵，适应新的数据分布
-  
-* Prompt tuning，在输入token前增加特殊的提示token，只微调提示token的embeding向量参数，适合小模型适配下游任务
+  > 小模型forward过程耗时占比增加，占大部分计算量
 
-* P tunning，是Prompt tuning的进阶版，提示token可插入prompt的指定位置
-
-* Prefix，在attention中的`K=X * Wk，V=X * Wv`对X增加可学习前缀token embeding矩阵，作为虚拟的提示上下文, `K=[P; X]Wk V=[P; X]Wv`P是可学习的参数矩阵，维度(L, d_model)，L表示需要增加的提示前缀长度，是超参数。`[P; X]`表示在X输入矩阵开始位置拼接矩阵P。
-  > prefix微调的是每一个transform层中的attention可学习前缀矩阵P，不同的层中，P不共享。    
-  
-* Bitfit，只微模型的偏置项，偏置项出现在所有线性层和Layernorma层中。    
-
-* Adapter，在transform模块的多头注意力与输出层之后增加一个adpter层，只微调adpter参数。 adpter包含`下投影linear + nolinear + 上投影linear; skip-connect结构`， 中间结构类似lora变体为`nonlinear(XA)B`的结构，skip-connect结构保证的模型能力最多退化为原模型；由于改变了Laynorm输入的数据分布，Laynorm的scale参数也需要加入训练。  
+#### 其他微调方法
+* 全量微调: 使用预训练模型权重进行初始化，使用较小的学习率对模型的全部参数进行训练
+* PreEmbed: 只微调token embedding参数矩阵，适应新的数据分布
+* Prompt tuning: 在输入token前增加特殊的提示token，只微调提示token的embeding向量参数，适合小模型适配下游任务
+* P tunning: 是Prompt tuning的进阶版，提示token可插入在prompt的指定位置，形成特殊模版
+* Prefix: 进行虚拟上下文嵌入，在attention层的`K=X * Wk，V=X * Wv`对X增加可学习前缀token embeding矩阵，作为虚拟的提示上下文, `K=[P; X]Wk V=[P; X]Wv`P是可学习的参数矩阵，维度(L, d_model)，L表示需要增加的提示前缀长度，是超参数。`[P; X]`表示在X输入矩阵开始位置拼接矩阵P
+  > prefix微调的是每一个transform层中的attention可学习前缀矩阵P，不同的层中，P不共享
+* Biasfit，只微模型的偏置项，偏置项出现在所有线性层和Layernorma层中
+* Adapter，在transform模块的多头注意力与输出层之后增加一个adpter层，只微调adpter参数。adapter包含`下投影linear + nolinear + 上投影linear; 残差连接结构`
+  > 中间结构类似lora变体为`nonlinear(XA)B`的结构，残差连接结构保证的模型能力最多退化为原模型
+  > 由于改变了Laynorm输入的数据分布，Laynorm的scale参数也需要加入训练
 
 ---
 
-#### 3. preference opimized
-  偏好对齐(优化)的目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性等。  
+### 3.偏好对齐
+  偏好对齐(优化) preference opimized, 目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性、情感等。GPT技术啊报告使用了PPO的强化学习算法，常见的 
 
 ##### 01 ppo
   * 具体的解读和代码注释，参照我的另一个仓库[deepseek_learning: r1 ppo](https://github.com/Aorunfa/deepseek_learning)
