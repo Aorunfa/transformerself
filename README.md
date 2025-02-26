@@ -134,15 +134,16 @@
 ---
 
 ### 3.偏好对齐
-  偏好对齐(优化) preference opimized, 目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性、情感等。GPT技术啊报告使用了PPO的强化学习算法，常见的 
+  偏好对齐(优化) preference opimized, 目的是让模型的输出更加符合用户的习惯，包括文字逻辑、风格、伦理性、安全性、情感等。GPT技术啊报告使用了PPO的强化学习算法，常见的的强化学习算法还要DPO,GRPO等
 
-##### 01 ppo
-  * 具体的解读和代码注释，参照我的另一个仓库[deepseek_learning: r1 ppo](https://github.com/Aorunfa/deepseek_learning)
+##### 01PPO
+  这一部分需要较强的理解能力和一定强化学习的基础，具体的解读和代码注释，参照我的另一个仓库[deepseek_learning: r1 ppo](https://github.com/Aorunfa/deepseek_learning)
+  > PS 至今我也只是浅显地理解大概，止于浅层应用 
 
-##### 02 dpo
-直接偏好优化(direct-preference-opimized)与ppo不同，直接跳过了奖励模型的训练，根据偏好数据一步到位训练得到对齐模型。[论文](https://arxiv.org/abs/2305.18290)解读可以参考博客[人人都能看懂的DPO数学原理](https://mp.weixin.qq.com/s/aG-5xTwSzvHXN4B73mfKMA)  
+##### 02DPO
+直接偏好优化 direct preference opimized，与PPO不同，直接跳过了奖励模型的训练，根据偏好数据一步到位训练得到对齐模型。[论文](https://arxiv.org/abs/2305.18290)解读可以参考博客[人人都能看懂的DPO数学原理](https://mp.weixin.qq.com/s/aG-5xTwSzvHXN4B73mfKMA)  
 
-dpo从ppo总体优化目标的三个原则出发```模型输出尽可能接近偏好标签，尽可能偏离非偏好标签，尽可能少偏离原模型输出```，推导最优奖励模型的显式解，代入奖励模型的损失函数，得到一个只与待训模型有关的损失函数，该函数就是偏好优化的目标。 
+DPO从ppo总体优化目标的三个原则出发```模型输出尽可能接近偏好标签，尽可能偏离非偏好标签，尽可能少偏离原模型输出```，推导最优奖励模型的显式解，代入奖励模型的损失函数，得到一个只与待训模型有关的损失函数，该函数就是偏好优化的目标。 
 
 筒体而言就是理论推到了一个损失函数，用这个损失函数微调模型
 
