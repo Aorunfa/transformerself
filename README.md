@@ -288,7 +288,7 @@ dinov2通过只是蒸馏的方式实现这个过程: 整体特征由教师模型
 对比clip是一种自监督方法，预训练不依赖任何标签信息
 
 <div align="center">
-  <img src="doc/dino_alg.png" alt="dino" width="620" height="230">
+  <img src="doc/dino_alg.png" alt="dino" width="700" height="260">
   <p style="font-size: 10px; color: gray;">dino思路</p>
 </div>
 
