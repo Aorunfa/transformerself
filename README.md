@@ -281,7 +281,11 @@ clip官方repo没有开源训练代码，不太好理解算法实现的具体细
 ---
 
 ## (三)Dinov2 区分性自监督蒸馏
-[dinov2](https://github.com/facebookresearch/dinov2)是视觉自监督训练的经典之作。总体思路使用局部的特征信息对齐整体的特征信息，使模型能区分图片的物体空间分布信息；整体特征由教师模型提取，局部特征由学生模型提取，教师模型权重由学生模型通过ema更行。主要适用视觉表征适应下游分类、分割等任务和以图搜图等，对比clip是一种自监督方法，预训练不依赖标签信息。
+[dinov2](https://github.com/facebookresearch/dinov2)是视觉自监督训练的经典之作。总体思路是训练过程不断对齐局部的特征信息和整体的特征信息，使模型能够捕捉图片的物体空间分布信息；可以理解为不断让模型看到局部的特征去推测全局的特征，告诉他推测好坏不断提升这种能力
+
+dinov2通过只是蒸馏的方式实现这个过程: 整体特征由教师模型提取，局部特征由学生模型提取。教师模型与学生模型是同一结构，只是权重由学生模型通过ema跟新。这种方式可以提取高效的视觉表征，适应下游分类、分割等任务和以图搜图等。
+
+对比clip是一种自监督方法，预训练不依赖任何标签信息
 
 <div align="center">
   <img src="doc/dino_alg.png" alt="dino" width="586" height="214">
@@ -289,19 +293,19 @@ clip官方repo没有开源训练代码，不太好理解算法实现的具体细
 </div>
 
 #### vit结构
-* patch embeding: 卷积实现投影矩阵
-* pos embedding: 使用可学习参数相加，分为cls embedding和patch embedding，插值实现patch的延展
-* transformer block: 使用残差块的droppath方法
-* head: MLP, 解耦image-level和patch-level的权重；用于平衡dino和ibot的损失
+* patch embedding提取: 卷积实现
+* pos embedding: 使用可学习参数相加，两类参数分别作用于cls token的和patch token的，插值实现patch的延展
+* transformer block: 使用残差连接的drop path方法
+* head: MLP层, 按照信息区分为image-level和patch-level的head；分别用于计算dino和ibot的损失，解耦输出头
 
 #### 蒸馏学习
-* 教师模型与学生模型使用同一个模型结构。不同在于，教师模型输入2张global crop，学生模型输入8张local crop
-* 将教师模型与学生模型的输出特征进行对齐，促使学生模型能够通过局部了解整体的能力
+* 教师模型与学生模型使用同一个模型结构。不同在于，教师模型输入2张global crop，学生模型输入8张local crop。这里的global和local可以理解为更大和更小的裁剪图片
+* 将教师模型与学生模型的输出特征升到高维度后进行对齐，促使学生模型能够通过局部了解整体的能力
 * 教师模型的参数通过ema加权学生模型的参数与历史参数，提高训练稳定性
 
 ### 损失设计
-* do_dino: image level，教师与学生模型的cls输出经可能相似，教师global输出对齐对应的学生global、学生所有的local输出
-* do_ibot: patch leval, 对于gloable，学生模型随机mask一些patch，教师模型正常输入。对mask的学生模型patch使用可学习的参数替换embeding，mask patch的最后输出与教师模型的gt尽可能相似
+* do_dino: 图片语义层级的损失(image level)，教师与学生模型的cls输出经可能相似，教师global输出对齐对应的学生global、学生所有的local输出
+* do_ibot: patch level, 对于gloable，学生模型随机mask一些patch，教师模型正常输入。对mask的学生模型patch使用可学习的参数替换embeding，mask patch的最后输出与教师模型的gt尽可能相似
 * do_koleo, 促使批次在特征空间内更加均匀分布，只监督学生模型vit的cls输出。蒸馏需要将输出升到超高维，如果存维度的数值集中在某些维度区域，很有可能造成模型参数更新的“偏心”，侧重对齐某些部分参数而失去的整体性的考量
 
 * SwAV：样本中心化方法， Sinkhorn-Knopp归一化。对教师模型的输出进行batch的去中心化
