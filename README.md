@@ -352,38 +352,37 @@ Hiera官方repo没有开源训练代码，为此写了一版mae和微调的训�
 # 六. 模型压缩
 
 ## 蒸馏
-适用将大模型的知识转移到小模型   
-需要有一个教师模型和学生模型，教师模型能力优于学生模型。训练阶段，对教师模型的输出的logits进行升维度，e.g 65535，获得教师模型输出的充分分布。学生模型的输出logits同样进行升维，对齐学生模型与教师模型输出。升维矩阵可以是随机初始化的。   
+适用将大模型的知识转移到小模型，需要有一个教师模型和学生模型，教师模型能力优于学生模型   
 
-对齐损失可以使用corss-entropy，KLloss；同时对logits的分布形态也可以做一些监督，避免偏态等。
+训练阶段，对教师模型的输出的logits进行升维度，e.g 65535，获得教师模型输出的充分分布。学生模型的输出logits同样进行升维，对齐学生模型与教师模型输出。升维矩阵可以是随机初始化的
 
-实战[dinov2_finetune](https://github.com/Aorunfa/dinov2_finetune)
+对齐损失可以使用交叉熵，kl损失；同时对logits的分布形态也可以做一些监督，避免偏态等，可以参照dinov2的蒸馏自监督训练
+
+友好的代码阅读可以参考，[dinov2_finetune](https://github.com/Aorunfa/dinov2_finetune)，还在持续开发
 
 ## 量化
 适用大模型训练、推理降低显存，牺牲时间换空间    
+
 低bit量化原理是对模型参数和激活值进行量化，量化参数使用更低精度的数值类型，e.g fp32-->fp8 存储32bit-->8bit，增加反量化恢复的计算开销，但约成倍降低显存。
 
-  量化的简单原理，e.g fp16量化为fp8，发生在权重量化和激活值量化
+量化的简单原理，e.g fp16量化为fp8，发生在权重量化和激活值量化
   * 给定的高精度矩阵W，shape=(1024, 1024)，设定一个block_size=128×128
   * 对矩阵W按照block_size进行分块，可得到chuncks_num = 1024 / 128 * 1024 / 128 = 64个chunck
   * 对每一个chunck，计算缩放系数`s = max(abs(chunck)) / 448.`, 448为fp8最大表示范围，s使用fp32存储
   * 对每一个chunck进行量化 `chunck_quant = chunck / s`，报错量化参数`chunck_quant.scale = s`
   * 对激活值的量化一般去一维的block_size=128，对每个token feature单独进行
 
-  量化的另一种方式是使用chunck内的数值分布，对应高斯分布，量化参数取分位数，缩放参数为对应的高斯分布分位数对应的数值
+量化的另一种方式是使用chunck内的数值分布，对应高斯分布，量化参数取分位数，缩放参数为对应的高斯分布分位数对应的数值
 
-  反量化的简单原理，e.g fp8反量化为fp16：W_dequant = W * W.scale，存储为fp16精度
+反量化的简单原理，e.g fp8反量化为fp16：W_dequant = W * W.scale，存储为fp16精度
 
 实战[lava_fitune](https://github.com/Aorunfa/llava_finetune)，如何使用peft进行量化训练
-实战[DeepseekV3](https://github.com/Aorunfa/deepseek_learning)，量化与反量化核函数的操作
-
-## 剪枝
-...pending
+实战[DeepseekV3 learning](https://github.com/Aorunfa/deepseek_learning)，量化与反量化核函数的操作
 
 ---
 
 # 七. 附录
-这一部分主要增加一些延展知识
+这一部分主要增加一些延展知识，适用于提高模型理解和工程化
 
 ## (一)RNN
 在transformer出现后，在nlp的各任务中rnn逐渐被替代，但在一些结构化数据的时序预测仍广泛使用。   
