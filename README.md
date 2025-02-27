@@ -304,25 +304,16 @@ dinov2通过只是蒸馏的方式实现这个过程: 整体特征由教师模型
 * 教师模型的参数通过ema加权学生模型的参数与历史参数，提高训练稳定性
 
 ### 损失设计
-* do_dino: 图片语义层级的损失(image level)，教师与学生模型的cls输出经可能相似，教师global输出对齐对应的学生global、学生所有的local输出
-* do_ibot: patch level, 对于gloable，学生模型随机mask一些patch，教师模型正常输入。对mask的学生模型patch使用可学习的参数替换embeding，mask patch的最后输出与教师模型的gt尽可能相似
-* do_koleo, 促使批次在特征空间内更加均匀分布，只监督学生模型vit的cls输出。蒸馏需要将输出升到超高维，如果存维度的数值集中在某些维度区域，很有可能造成模型参数更新的“偏心”，侧重对齐某些部分参数而失去的整体性的考量
+* do_dino: 图片语义层级的损失(image level), 教师与学生模型的cls输出经可能相似，教师global输出对齐对应的学生global、学生所有的local输出
+* do_ibot: 结构层级的损失(patch level), 对于gloable crop，学生模型随机mask一些patch，教师模型正常输入。对mask的patch学生模型使用可学习的参数替代，最后对应的输出与教师模型的ground truth尽可能相似
+* do_koleo: 高维特征分布偏态的损失, 只监督学生模型vit的cls输出。蒸馏需要将输出升到超高维，如果存维度的数值集中在某些维度区域，很有可能造成模型参数更新的“偏心”，导致过于对齐某些部分参数而失去的整体性的考量
+* SwAV操作：样本中心化方法， Sinkhorn-Knopp归一化。对教师模型的输出进行batch的去中心化，将输出缩放到同样的维度
 
-* SwAV：样本中心化方法， Sinkhorn-Knopp归一化。对教师模型的输出进行batch的去中心化
-
-
-### 实战
-...pending
-02 手撕一版友好阅读的训练代码, dino简单预训练代码
-    dinov2 原始的仓库项目深度使用的fsdp训练的组件，实现模型分片、进程同步、分片模型保存的
-    
-01 使用dino进行图片的retrival，以图搜图 -- 手撕一个retrival代码
-
-### 一些后续泛化工作
-  * [grounding-dinov](https://github.com/IDEA-Research/GroundingDINO)
+### 实战: 从头训练dinov2
+[dinov2_finetune](https://github.com/Aorunfa/dinov2_finetune), 持续开发中
+* 后续泛化工作 [grounding-dinov](https://github.com/IDEA-Research/GroundingDINO)
 
 ---
-
 
 ## (四)Hiera MAE自监督预训练
 > 引子：之所以把hiera加进来，是由于其用到了MAE的高效自监督训练方法理解图片结构信息，同时sam2也以hiera作为高效特征提取器
