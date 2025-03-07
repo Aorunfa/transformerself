@@ -50,7 +50,7 @@
 
 * FFN前馈神经网络, 隐藏层维度设置`4*d_model`，特征向量映射在更高维的隐空间交互，实现类似特征增强的效果, 4这个值目前看没太多意义，应该是基于最佳实验原则设计
 
-* pos embedding沿着sequence_length和d_model对应的两个维度对token embedding加上位置数值，标记位置信息。简单理解一个特征矩阵Q中任意一个数值通过向前diff和向上diff可以提取位置信息，模型可以学到这种模式
+* pos embedding沿着sequence_length和d_model对应的两个维度对token embedding加上位置数值，标记位置信息。简单理解，在进行注意力计算`q*k^T`一个特征矩阵Q中任意一个数值通过向前diff和向上diff可以提取位置信息，模型可以学到这种模式
 
 * token embedding矩阵是可学习矩阵，实现将一个token_id转换为对应embedding向量，维度数量d_model。注意，与卷积 通道数值不同，每一个维度下的token向量值并不是指向某种性质，纵向对比没有意义
 
@@ -111,6 +111,7 @@
   <div align="center">
     <img src="doc/lora.png" alt="lora" width="280" height="40">
   </div>
+  
   * linear层参数是一个shape为(in_feature, out_feature)的参数矩阵(先不考虑bias)，表示为W0
   * A是shape为(in_feature, r)的矩阵，B是shape为(r, out_feature)的矩阵。设定r远小于out_feature，A和B为低秩矩阵，r越大，AB的参数的自由度越高
   * α是lora_alpha，用于缩放低秩矩阵的增量，平衡每一次参数更新对原参数W0的影响
