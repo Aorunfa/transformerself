@@ -164,7 +164,7 @@ DPO从PPO总体优化目标的三个原则出发```每一步更新，模型输�
 * 预训练: 采用mask language和相邻句子判别的方式进行预训练
   > * mask language训练方式随机遮掩原始token(10%被随机替换为其他token, 5%为统一替换为mask token)，对齐被遮掩的token输出的预测和真实值，即多分类损失。通过这种挖词填空促使模型也能理解上下文信息
    
-  > * 相邻句子判断，将输入划分为句子+分隔标记+下一句子，通过CLS位置的输出进行分类监督, 使模型能够理解上下句的关联。这个训练步骤在后续的研究中逐渐淡化，估计是没啥大用
+  > * 相邻句子判断，将输入划分为句子+分隔标记+下一句子，通过CLS token对应的输出进行分类监督, 使模型能够理解上下句的关联。这个训练步骤在后续的研究中逐渐淡化，估计是没啥大用
   
   > * 特殊输入标记包括，类别标记`[CLS]`，句子分隔标记`[SEP]`，遮掩token标记`[MASK]`。`[CLS]`标记标记主要用于提取句子的整体语义，后续作为下游分类头的输入，也可用于语义相似度
   
@@ -174,82 +174,85 @@ DPO从PPO总体优化目标的三个原则出发```每一步更新，模型输�
   
   > * 对于输入截长补短产生的padding mask区分实际token和padding token，用于在softmax中归零padding token的注意力得分，例如一个token查到padding token，计算得到的注意力权重应该为总是0
 
-* 微调: 以bert作为backbone增加输出头，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果
+* 微调: 以bert作为backbone，增加输出头，初始化pretained权重，只训输出网络或较以较小学习率全量微调即可达到不错的效果
 
 ### 实战: 中文地址分类
-项目见本仓库`/Bert-Chinese-Email-Addresses-Classification`，适用地址文本解析，快速理解整个bert模型结构，微调数据的加载方式和训练过程。参考于项目[bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)
+项目见本仓库`/Bert-Chinese-Email-Addresses-Classification`，适用地址文本的解析，快速理解整个bert模型结构，微调数据的加载方式和训练过程。参考于项目[bert中文分类](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)
   
 ## (三)T5
-* 介绍: encoder-decoder结构，使用完整的transformer结构，统一的text-to-text框架，两个组件的特点决定了其适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[论文解读](https://zhuanlan.zhihu.com/p/89719631)
+* 介绍: encoder-decoder结构，使用完整的transformer结构，统一的text-to-text框架将各类任务转换为文本到文本的输出。两个组件的特点决定了其适用于所有的NLP任务包括文本分类、机器翻译、摘要生成、问答等。[论文地址](https://arxiv.org/abs/1910.10683)[论文解读](https://zhuanlan.zhihu.com/p/89719631)
   
-  一些结构差异说明:
+  一些相对于传统的transformer的结构差异说明:
   
-  > * 共享的相对位置编码: 在attention层的计算注意力权重`qi * kj^T`上加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数，通过可学习的相对偏置表征相对位置 [详解](https://blog.csdn.net/qq_44665283/article/details/140526203)
-  > * Teacher Forcing的训练策略: 训练gpt输入和输出的匹配策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。大白话就是将input[:-1]作为输入，input[1:]作为标签，t5的预训练使用这种，**而不是bert输出与输入的位置相对应**
+  > * 共享的相对位置编码: 在attention层的计算注意力权重`q[i] * k[j]^T`上加上一个可学习的偏置项`bij`，在每个注意力层的同一个头共享一套bij参数，通过可学习的相对偏置表征相对位置 [详解](https://blog.csdn.net/qq_44665283/article/details/140526203)
+  > * Teacher Forcing的训练策略: 训练gpt输入和输出的监督匹配策略。本身用于rnn自回归任务中，训练时使用t时刻的真值作为t+1时刻的输入，但需要计算t时刻预测与真值的损失。大白话就是将input[:-1]作为输入，input[1:]作为标签，t5的预训练使用这种，**而不是bert输出与输入的位置相对应**
 
-* 预训练: 选择mask-and-mask-ratio、prefix的text2text方法
-  > * prefix的text2text框架: 将所有的任务通过prefix进行表示，标签统一转换为prefix+文本到prefix+文本形式，见微调的例子
+* 预训练: 选择mask-and-mask-ratio, prefix的text2text方法
+  > * 带前缀的text2text框架: 将所有的任务通过prefix进行表示，标签统一转换为prefix+文本到prefix+文本形式，见微调的例子
   > * 预训练方式: 采用bert风格掩码语言模型的训练方式，预测mask的部分。(实验对照: 自回归式、文本打乱还原式)
-  > * 破坏方式：采用replace span，replace连续的token并打上唯一标记，target为`(唯一标记 + mask内容) * n + 终止符号`，可加速训练，n为replace个数。(实验对照：bert的mask方式，随机丢弃)
+  > * 破坏方式：mask方式的优化版本，采用replace span，replace连续的token并打上唯一标记，target为`(唯一标记 + mask内容) * n + 终止符号`，可加速训练，n为replace个数。(实验对照：bert的mask方式，随机丢弃)
   > * 破坏比例：采用15%的破坏比例
   > * 遮掩span长度：采用3的span长度
   > * 多任务加微调策略：**无监督数据里面混入一定比例的多任务的有监督数据**，有监督数据的构造方式同微调中text2text输入输出格式。与加入多任务数据数据预训练差不多，但最后采用的原因是可以监督下游多任务的性能
   
-* 微调：全量，逐步解冻，adapter
-  > * text2text输入输出格式: 输入为`任务类型的prefix + input; 目标prefix + target`，如翻译任务将数据`{'en': 'That is good', 'ge': 'Das ist gut'}`转换为`{'input': 'translate English to German: That is good', 'target': 'Das ist gut'}`最终合并为prefix标注输入`translate English to German: That is good. target: Das ist gut`。对于其他任务的转换形式参考论文
+* 微调: 比较了全量、逐步解冻和adapter的微调方法
+  > * 带前缀的text2text输入输出格式: 输入为`任务类型的prefix + input; 目标prefix + target`，如翻译任务将数据`{'en': 'That is good', 'ge': 'Das ist gut'}`转换为`{'input': 'translate English to German: That is good', 'target': 'Das ist gut'}`最终合并为prefix标注输入`translate English to German: That is good. target: Das ist gut`
+  > 对于其他任务的转换形式参考原论文，本质上是设计了一种各类任务转换成文本到文本的规则
   > * 还是全量微调更胜一筹，逐步解冻次之
 
 ### 实战: 中文摘要总结
-项目见目录`/T5-pegasus-chinese`，训练loss和case大致符合预期，
+项目见目录`/T5-pegasus-chinese`，训练loss和case大致符合预期
   * 这里强调解码方法 greedy-decoding vs beam-search，两者都适用于自回归场景
-  > * greedy-decoding，每次选择logits最大的token作为下一个输入
-  > * beam-search，设定beam size为k, 第一次回归选择top k的输出token作为k个波束序列, 下一次依次对k个波束进行自回归，得到k*k个波束，按照token的累乘或平均logit保留top k的波束序列，依次往后执行k个波束的自回归和排序过滤操作。保证模型每次回归只执行k次推理。用于翻译和摘要输出可以提高回答质量
+  > * greedy-decoding: 贪婪解码的方式，每次选择logits最大的token作为下一个输入
+  > * beam-search: 多束保留的解码方式，设定beam size为k, 第一次回归选择top k的输出token作为k个波束序列, 下一次依次对k个波束进行自回归，得到k*k个波束，按照token的累乘或平均logit保留top k的波束序列，依次往后执行k个波束的自回归和排序过滤操作。保证模型每次回归只执行k次推理。通常用于翻译和摘要输出，可以提高回答质量
 
 ## (四)DeepseekV3 
-decoder-only的MOE架构，推理训练低成本怪物
+decoder-only的MOE架构，MLA注意力和MTP的预训练方法，8bit量化训练，推理训练低成本成功实践
 * 具体的技术点解读和代码注释，参照我的另一个仓库[deepseek_learning](https://github.com/Aorunfa/deepseek_learning)
 
 ---
 
 # 五. 经典视觉transformer
-这一章介绍tranformer在视觉领域的经典应用，并开发分享能够快速上手新的视觉项目，理解模型结构和相关操作
+这一章介绍tranformer在视觉领域的经典应用，并配套开发能够快速上手新的视觉项目，理解模型结构和相关操作原理
 
 ## (一)Clip 对比学习弱监督
-[clip](https://github.com/openai/CLIP)作为多模态的早期经典之作，主要通过对齐文本编码和图片编码，让模型能够匹配图片和给定文本，或匹配文本和给定的图片。主要适用视觉表征、文本到图片或图片到文本的匹配场景。特别地，clip预训练使用的大多是图片类别文本，我理解更适用以物体文本搜图
+[clip](https://github.com/openai/CLIP)作为多模态的早期经典之作，主要通过对齐文本编码和图片编码，让模型准确能够匹配图片和给定文本描述，或匹配文本和给定的图片。主要适用视觉表征、文本到图片或图片到文本的匹配场景。特别地，clip预训练使用的大多是图片类别文本，我理解更适用以物体文本搜图。
+clip总体思路是在一个batch内，使用text encoder提取文本表征，使用vit提取对应图片的视觉表征，最大化文本和对应视觉表征的相似度，由此对齐文本和图片的信息。
 <div align="center">
   <img src="doc/clip_alg.png" alt="clip" width="650" height="260">
   <p style="font-size: 10px; color: gray;">clip思路</p>
 </div>
 
 * 预训练
-  > * 文本编码器使用类似带casual-mask的transformer结构，对文本最后添加一个结束符`=`，使用因果mask的注意力机制，经过transform后取结束符对应的编码表征文本信息
-  > * 图片编码器使用经典vit，通过卷积划分不重叠的patch，展平，在开头添加一个cls token对应的可学习embedding向量, 输入attention encoder层，提取cls对应的嵌入向量表征图片信息
+  > * 文本编码器使用类似带casual-mask的transformer结构，对文本最后添加一个结束符`=`，经过transform后取结束符对应的编码表征文本语义信息，有点类似bert的CLS token提取文本的语义信息
+  > * 图片编码器使用经典vit，通过卷积划分不重叠的patch得到对应的patch token embedding，按照patch位置展平，在开头添加一个行可学习的向量作为CLS token embedding，输入多个attention encoder层，提取cls对应的嵌入向量表征图片语义信息
   > * 损失计算，对batch内的图片向量组和文本向量组，进行两两组合计算相似度，最大化batch中对应的图片-文本的相似度
 
 * 举例: clip实现vit，以224×224图片、32×32的patch size为例:
-  > * 以32×32kernal大小，32stride，输入channel为3，输出channel为d_model的卷积核完成patch划分和特征提取，得到形状为(7,7,d_model)特征图，展平为(49, d_model)的token_embeding矩阵
-  > * 在的token_embeding矩阵的首行嵌入一行CLS向量，用于表征整个图片的特征，向量参数为可学习参数，token_embeding最后形状为(50, d_model)
+  > * 以kernal szie大小为32×32，stride为32，输入channel为3，输出channel为d_model的卷积核完成patch划分和以及每个patch的特征提取，得到形状为(224/32, 224/32, d_model)特征图，展平为(49, d_model)的token embeding矩阵
+  > * 在的token embeding矩阵的首行嵌入一行可学习的cls向量，用于提取整个图片的语义表征，token embeding最后形状为(50, d_model)
   > * 位置编码的position embeding采用可学习参数
-  > * 经过encoder后提取CLS向量对应的特征向量，通过一个前馈网络将特征维度对齐的到文字的特征维度`nn.Linear(oupt_dim, d_model)`表示图片的语义特征
+  > * 经过encoder后提取cls向量对应的特征向量，通过一个ffn前馈网络将特征维度对齐的到文字的特征维度`nn.Linear(oupt_dim, d_model)`表示图片的语义特征
 
 * 一些后相关续泛化工作
-  > * [Blip](https://github.com/salesforce/BLIP)，增加图片caption、qa能力
+  > * [Blip2](https://github.com/salesforce/BLIP)，增加图片caption、qa能力
   > * [LLaVA](https://github.com/haotian-liu/LLaVA)，clip vision enoder + adaper +llm，高效对齐多模态指令遵循
   > * [DALL-E](https://github.com/openai/DALL-E)，增加基于VAE的文本到图片的生成
   > * ...
 
 #### 实战
 实战[clip_finetune](https://github.com/Aorunfa/clip_finetune)，CLIP的代码比较好读懂，从CLIP的代码可以快速搞懂Vit的具体的实现过程  
+
 clip官方repo没有开源训练代码，不太好理解算法实现的具体细节，为此我结合[open_clip](https://github.com/mlfoundations/open_clip)，增加了clip训练代码，只需要少量数据和资源进行快速复现，方便快速理解算法设计细节
 
 ---
 
 ## (二)LLaVA adapter高效多模态指令对齐
-[llava](https://github.com/haotian-liu/LLaVA)更新了三个版本v1、v1.5、v1.6。整体结构为使用vit作为vison encoder，权重初始化自clip，使用预训练的llama作为text decoder，中间设置一个adapter，将vison token对齐到text token的向量空间。   
+[llava](https://github.com/haotian-liu/LLaVA)更新了三个版本v1、v1.5、v1.6。整体结构为使用clip作为vison encoder，初始化自clip预训练权重，使用预训练的llama作为text decoder，中间设置一个adapter将vison token对齐到text token的向量空间。   
 
-在vison token featuer 前后增加特殊的图片开始和结束标志位，和text token完成特征拼接，模板化输入  
+在vison token feature前后增加特殊的图片开始和结束标志位，和text token完成特征拼接，得到一个模板化输入  
 
-*llava的优势在于，使用的训练数据极少，完整的训练时间非常短，8×A100一天完成训练*
+llava的优势在于，使用的训练数据极少，完整的训练时间非常短达到很好的效果，8×A100一天完成训练
 
 <div align="center">
   <img src="doc/llava.png" alt="lora" width="718" height="240">
@@ -270,13 +273,14 @@ clip官方repo没有开源训练代码，不太好理解算法实现的具体细
 
 > **llava-1.6**
 > * 从源码看来，是对论文中llava-1.5-HD的实现。使用224分辨力的clip作为vision encoder
-> * 对高分辨率的图片resize并padding到预设高分辨率，将图片等分为四个区域加上一张原始resize图片(224的分辨率)，分别进行encoder后完成拼接，得到vison token
+> * 对高分辨率的图片resize并padding到预设高分辨率，将图片等分为四个区域加上一张原始resize图片(224的分辨率)，分别进入encoder后完成拼接，得到vison token，增强位置表征能力
+> * 后续的视频理解模型llava-next，将视频抽分别进入encoder后完成拼接
 
 ### 训练
 训练包括两个阶段，全程冻结vison encoder，第一阶段只训练adapter，完成模态对齐。第二阶段训练adaper和llm，完成指令微调，可见其高效性
 
 ### 实战: llava快速入门transformer微调组件
-实战[lava_fitune](https://github.com/Aorunfa/llava_finetune)，我从llava将下述方法单独列出，进行了微小的改动，特别针对fsdp和ddp写了一版训练代码，方便快速理解训练实现细节
+实战[lava_fitune](https://github.com/Aorunfa/llava_finetune)，我从llava官方repo里面将下述方法单独列出，进行了微小的改动，特别针对fsdp和ddp写了一版训练代码，方便快速理解训练实现细节
 - lora微调
 - qlora微调
 - 4bit、8bit量化训练
