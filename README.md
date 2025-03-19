@@ -40,17 +40,17 @@
 
 首先推荐先阅读[周弈帆的博客解读transformer](https://zhouyifan.net/2022/11/12/20220925-Transformer/)， 达到能够理解以下重点，陈述思路为从局部到整体: 
 
-* 注意力机制: `q*K^T`做一次向量化查询，注`q:行向量, K:k的行向量矩阵`，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, q*K^T权值大小量级与维度正相关, sqrt(d_model)用于缩放，类似于标准化，将softmax梯度集中在明显变化区域。每一次查询匹配一次key表，生成新的val特征，特征提取方向与loss下降方向一致。可以理解为基于query进行特征挖掘，特征信息来源可以是自身(self-attantion)或者其他对象(cross-attention)
+* 注意力机制: `q*K^T`做一次向量化查询，注`q:query行向量, K:key的行向量矩阵`，`sofmax(q*K^T / sqrt(d_model)) * V`完成查询结果的加权, q*K^T权值大小量级与维度正相关, sqrt(d_model)用于缩放，类似于标准化，将softmax梯度集中在明显变化区域。每一次查询匹配一次key表，生成新的value特征，特征提取方向与loss下降方向一致。可以理解为基于query进行特征挖掘的机制，特征信息来源可以是自身(self-attantion)或者其他对象(cross-attention)
 
-* 多头注意力设计: 按照d_model折叠分组查询，参数量使用更少，最后通过一个ffn进行全局特征的交互，保证效果相当
+* 多头注意力设计: 按照d_model对q,k,v进行折叠分组查询，参数量使用更少，最后通过一个ffn进行全局特征的交互，保证效果相当
 
-* 注意力mask: 在sequence上，保证当token前查询只能看到自己以及之前的token信息，模拟rnn的串行输出，在decoder的自注意力层使用causal-mask作用于`q*K^T`注意力得分实现
+* 注意力mask: 在sequence上，保证当前token查询只能看到自己以及之前的token信息，模拟rnn的串行输出，在decoder的自注意力层使用causal-mask作用于`q*K^T`注意力得分实现，对mask掉的查询得分重置为负无穷，softmax后这些查询得到的注意力得分为0
 
-* 可训参数矩阵`Wq Wk Wv Wo`实现类似自动化特征工程的效果，如对一个token x计算`q=x Wq^T`可以生成一个查询向量，查询优化方向和loss下降方向一致，torch中以nn.Linear线性层表示这些矩阵  
+* 可训参数矩阵`Wq Wk Wv Wo`实现类似自动化特征工程的效果，如对一个token x计算`q=x*Wq, x为行向量, Wq形状为(in_feature, out_feature)`可以生成一个查询向量，查询优化方向和loss下降方向一致，torch中以nn.Linear线性层表示这些矩阵  
 
-* FFN前馈神经网络, 隐藏层维度设置`4*d_model`，特征向量映射在更高维的隐空间交互，实现类似特征增强的效果, 4这个值目前看没太多意义，应该是基于最佳实验原则设计
+* FFN前馈神经网络, 隐藏层维度设置`4*d_model`，特征向量映射在更高维的隐空间交互，实现类似特征增强的效果, 4这个值目前看没太多可解释意义，应该是基于最佳实验原则设计
 
-* pos embedding沿着sequence_length和d_model对应的两个维度对token embedding加上位置数值，标记位置信息。简单理解，在进行注意力计算`q*k^T`一个特征矩阵Q中任意一个数值通过向前diff和向上diff可以提取位置信息，模型可以学到这种模式
+* pos embedding位置编码沿着sequence_length和d_model对应的两个维度对token embedding加上位置数值，标记位置信息。简单理解，在进行注意力计算`q*k^T`一个特征矩阵Q中任意一个数值通过向前diff和向上diff可以提取位置信息，模型可以学到这种模式
 
 * token embedding矩阵是可学习矩阵，实现将一个token_id转换为对应embedding向量，维度数量d_model。注意，与卷积 通道数值不同，每一个维度下的token向量值并不是指向某种性质，纵向对比没有意义
 
