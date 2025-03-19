@@ -291,10 +291,12 @@ llava的优势在于，使用的训练数据极少，完整的训练时间非常
 
 ---
 
-## (三)Dinov2 区分性自监督蒸馏
-[dinov2](https://github.com/facebookresearch/dinov2)是视觉自监督训练的经典之作。总体思路是训练过程不断对齐局部的特征信息和整体的特征信息，使模型能够捕捉图片的物体空间分布信息；可以理解为不断让模型看到局部的特征去推测全局的特征，告诉他推测好坏不断提升这种能力
+## (三)Dinov2 对比学习自监督蒸馏
+[dinov2](https://github.com/facebookresearch/dinov2)是视觉自监督训练的经典之作。总体思路是训练过程不断对齐图片局部的特征信息和整体的特征信息，使模型能够捕捉图片的空间分布信息
 
-dinov2通过只是蒸馏的方式实现这个过程: 整体特征由教师模型提取，局部特征由学生模型提取。教师模型与学生模型是同一结构，只是权重由学生模型通过ema跟新。这种方式可以提取高效的视觉表征，适应下游分类、分割等任务和以图搜图等。
+可以理解为不断让模型看到局部的特征去推测全局的特征，告诉他推测好坏不断提升这种能力
+
+dinov2通过自蒸馏的方式实现这个过程: 整体特征由教师模型提取，局部特征由学生模型提取。教师模型与学生模型是同一结构，只是权重由学生模型通过ema滞后更新。这种方式可以提取高效的视觉表征，适应下游分类、分割和以图搜图等任务
 
 对比clip是一种自监督方法，预训练不依赖任何标签信息
 
@@ -304,10 +306,10 @@ dinov2通过只是蒸馏的方式实现这个过程: 整体特征由教师模型
 </div>
 
 #### vit结构
-* patch embedding提取: 卷积实现
-* pos embedding: 使用可学习参数相加，两类参数分别作用于cls token的和patch token的，插值实现patch的延展
-* transformer block: 使用残差连接的drop path方法
-* head: MLP层, 按照信息区分为image-level和patch-level的head；分别用于计算dino和ibot的损失，解耦输出头
+* patch embedding提取: 与clip相似，通过vit卷积实现
+* pos embedding: 使用可学习参数相加，分别作用于cls token的和patch token的，超过预设分辨率的图片通过插值实现patch的延展
+* transformer block: 使用残差连接的drop path方法，随机dropout一定比例的残差块的输出
+* head: MLP层, 按照信息区分为image-level和patch-level的head；分别用于计算dino和ibot的损失，解耦输出头。image-level可以理解为提取语义的表征，patch-level提取图片空间结构的表征
 
 #### 蒸馏学习
 * 教师模型与学生模型使用同一个模型结构。不同在于，教师模型输入2张global crop，学生模型输入8张local crop。这里的global和local可以理解为更大和更小的裁剪图片
@@ -315,14 +317,13 @@ dinov2通过只是蒸馏的方式实现这个过程: 整体特征由教师模型
 * 教师模型的参数通过ema加权学生模型的参数与历史参数，提高训练稳定性
 
 ### 损失设计
-* do_dino: 图片语义层级的损失(image level), 教师与学生模型的cls输出经可能相似，教师global输出对齐对应的学生global、学生所有的local输出
+* do_dino: 图片语义层级的损失(image level), 教师与学生模型的cls token的输出经可能相似，教师global输出对齐对应的学生global、学生所有的local输出，用于语义的对齐
 * do_ibot: 结构层级的损失(patch level), 对于gloable crop，学生模型随机mask一些patch，教师模型正常输入。对mask的patch学生模型使用可学习的参数替代，最后对应的输出与教师模型的ground truth尽可能相似
 * do_koleo: 高维特征分布偏态的损失, 只监督学生模型vit的cls输出。蒸馏需要将输出升到超高维，如果存维度的数值集中在某些维度区域，很有可能造成模型参数更新的“偏心”，导致过于对齐某些部分参数而失去的整体性的考量
-* SwAV操作：样本中心化方法， Sinkhorn-Knopp归一化。对教师模型的输出进行batch的去中心化，将输出缩放到同样的维度
+* SwAV操作：样本中心化方法， Sinkhorn-Knopp归一化。对教师模型的输出进行batch的去中心化，将输出缩放到同样的基准，不同图片的损失量级控制在相当的水平
 
 ### 实战: 从头训练dinov2
 [dinov2_finetune](https://github.com/Aorunfa/dinov2_finetune), 持续开发中
-* 后续泛化工作 [grounding-dinov](https://github.com/IDEA-Research/GroundingDINO)
 
 ---
 
