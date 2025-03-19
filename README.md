@@ -107,30 +107,30 @@
 *以下着重对lora微调进行详细介绍，其他微调方法只做简单说明* 
 
 #### 01低秩矩阵自适应微调 lora
-  [lora](https://arxiv.org/abs/2106.09685)微调是大模型最常用的微调手段，本质是对linear层进行调整，如可学习矩阵**W（Wq Wk Wv Wo ...）**，ffn层等，但不直接对其进行训练，而是使用类似残差连接并控制训练参数自由度的方式进行训练，基本公式为如下
+  [lora](https://arxiv.org/abs/2106.09685)微调是大模型最常用的微调手段，本质是对linear层进行调整，如可学习矩阵**W（Wq Wk Wv Wo ...）**，ffn层等，但不直接对其进行参数调整，而是使用类似残差连接并控制参数自由度的方式进行训练，基本公式为如下
   <div align="center">
     <img src="doc/lora.png" alt="lora" width="280" height="40">
   </div>
   
   * linear层参数是一个shape为(in_feature, out_feature)的参数矩阵(先不考虑bias)，表示为W0
-  * A是shape为(in_feature, r)的矩阵，B是shape为(r, out_feature)的矩阵。设定r远小于out_feature，A和B为低秩矩阵，r越大，AB的参数的自由度越高
-  * α是lora_alpha，用于缩放低秩矩阵的增量，平衡每一次参数更新对原参数W0的影响
-  * "+"的方式类似残差连接的结构，保证原始模型效果不退化太大
+  * A是shape为(in_feature, r)的矩阵，B是shape为(r, out_feature)的矩阵。设定r远小于out_feature，A和B为低秩矩阵，r越大，AB的参数量越大，可变换的自由度越高
+  * α是lora_alpha，用于缩放低秩矩阵的增量，平衡每一次参数更新对原参数W0的影响，α越小，对原矩阵的更新越小
+  * "+"的方式类似残差连接的结构，保证极端情况下原始模型效果不退化太大
 
   相比全量微调lora需要的显存大大减小，但在小模型上训练速度不一定更快
   > 小模型forward过程耗时占比增加，占大部分计算量
 
 #### 02其他微调方法
-* 全量微调: 使用预训练模型权重进行初始化，使用较小的学习率对模型的全部参数进行训练
-* PreEmbed: 只微调token embedding参数矩阵，适应新的数据分布
+* 全量微调: 使用预训练模型权重进行初始化，使用很小的学习率对模型的全部参数进行训练
+* PreEmbed: 冻结其他所有参数，只微调token embedding参数矩阵，适应新的text数据分布
 * Prompt tuning: 在输入token前增加特殊的提示token，只微调提示token的embeding向量参数，适合小模型适配下游任务
 * P tunning: 是Prompt tuning的进阶版，提示token可插入在prompt的指定位置，形成特殊模版
 * Prefix: 进行虚拟上下文嵌入，在attention层的`K=X * Wk，V=X * Wv`对X增加可学习前缀token embeding矩阵，作为虚拟的提示上下文, `K=[P; X]Wk V=[P; X]Wv`P是可学习的参数矩阵，维度(L, d_model)，L表示需要增加的提示前缀长度，是超参数。`[P; X]`表示在X输入矩阵开始位置拼接矩阵P
   > prefix微调的是每一个transform层中的attention可学习前缀矩阵P，不同的层中，P不共享
 * Biasfit，只微模型的偏置项，偏置项出现在所有线性层和Layernorma层中
-* Adapter，在transform模块的多头注意力与输出层之后增加一个adpter层，只微调adpter参数。adapter包含`下投影linear + nolinear + 上投影linear; 残差连接结构`
+* Adapter，在transform模块的多头注意力与输出层之后增加一个adpter层，只微调adpter参数。adapter包含`下投影linear + 非线性激活 + 上投影linear; 使用残差连接结构`
   > 中间结构类似lora变体为`nonlinear(XA)B`的结构，残差连接结构保证的模型能力最多退化为原模型
-  > 由于改变了Laynorm输入的数据分布，Laynorm的scale参数也需要加入训练
+  > 由于改变了Laynorm输入的数据分布，Laynorm的scale和shift参数也需要加入训练
 
 ---
 
