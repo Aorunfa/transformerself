@@ -329,7 +329,7 @@ dinov2通过自蒸馏的方式实现这个过程: 整体特征由教师模型提
 
 ## (四)Hiera MAE自监督预训练
 > 引子：之所以把hiera加进来，是由于其用到了MAE的高效自监督训练方法理解图片结构信息，同时sam2也以hiera作为高效特征提取器
-* [hiera](https://github.com/facebookresearch/hiera)第一个特点是优化了传统vit结构在特征分辨率始终如一的特性，使用了池化的方式减小深层的特征的分辨率，提高了参数利用率(可以类比于经典高效卷积结构大多是多层级的分辨率特征图进行组合)
+* [hiera](https://github.com/facebookresearch/hiera)第一个特点是优化了传统vit结构在特征分辨率始终如一的特性，即划分了patch后得到的token数量是固定的，参考卷积存在池化降采样操作，hiera使用了池化的方式减小深层的特征的分辨率，提高了参数利用率和计算效率
 * 第二是采用了[mask-auto-encoder](https://github.com/facebookresearch/mae)的自监督方法进行预训练  
 hiera更轻量，微调下游任务效果更好，官方主要针对imgnet1k分类和k-400视频动作的分类进行了微调。论文解读可以参照[Hiera笔记](https://zhuanlan.zhihu.com/p/719060883)
 
@@ -339,12 +339,12 @@ hiera更轻量，微调下游任务效果更好，官方主要针对imgnet1k分�
 </div>
 
 ### 特征提取器
-  * 浅层layer使用高分辨率和小特征维度，深层特征使用低分辨率和大特征维度
+  * 浅层layer使用高分辨率和小特征维度，深层特征使用低分辨率和大特征维度，特征维度是指(batch, seq_length, d_model)最后一个维度
   * 使用maxpool进行特征图下采样
-  * 前两阶段使用局部窗口注意力机制（mask unit window），后两个阶段使用全局注意力机制
+  * 前两阶段使用局部窗口注意力机制只在给定的窗口内对patch组进行注意力（mask unit window），后两个阶段使用全局注意力机制
   
 ### MAE训练方式
-该方法主要是随机遮掩图片的patch窗口，将未遮掩的patch窗口拼接，送入encoder进行编码，再由decoder预测出被mask掉的patch窗口，mask的patch窗口的真值和预测值最后会由一个nn.Linear层将特征维度映射到超高维度，使用MSE损失度量分布差异
+该方法主要是随机遮掩图片的patch窗口，将未遮掩的patch窗口拼接，送入encoder进行编码。将特征恢复为原来patch的排列，使用可学习embedding填充mask token位置，再经过decoder提取出被mask掉的patch窗口。mask的patch窗口的真值和预测值最后会由一个nn.Linear层将特征维度映射到超高维度，使用MSE损失度量分布差异
 
 * mask生成: 计算遮掩给定大小连续patch的方阵(mask_unit)后得到的特征图分辨率，基于该分辨率随机mask给定比例的点，保证batch内的每一个图mask的比例相同，才能进行min-batch training
 
@@ -352,7 +352,7 @@ hiera更轻量，微调下游任务效果更好，官方主要针对imgnet1k分�
   > * encoder得到没有被mask掉的patch特征
   > * 恢复到原来的patch排列顺序，mask区域填充*可学习参数*，非mask区域填充encoder得到的特征
   > * 送入vit decoder得到最后预测输出
-  > * 获得标签，对原图片按照最终的下采样stride分块，块状内的channel展平，对齐预测输出的特征空间维度，筛选出被mask掉的区域
+  > * 获得标签，对原图片按照最终的下采样stride分块，块状内的channel展平，nn.Linear对齐预测输出的特征空间维度，筛选出被mask掉的区域
   > * 通过线性层间预测值与真值的特征维度映射到超高维度(65535), 使用均方误差计算pred和label的差异
 
 ### 实战: MAE自监督预训练一个Hiera和视频分类微调
