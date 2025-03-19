@@ -217,7 +217,9 @@ decoder-only的MOE架构，MLA注意力和MTP的预训练方法，8bit量化训�
 
 ## (一)Clip 对比学习弱监督
 [clip](https://github.com/openai/CLIP)作为多模态的早期经典之作，主要通过对齐文本编码和图片编码，让模型准确能够匹配图片和给定文本描述，或匹配文本和给定的图片。主要适用视觉表征、文本到图片或图片到文本的匹配场景。特别地，clip预训练使用的大多是图片类别文本，我理解更适用以物体文本搜图。
+
 clip总体思路是在一个batch内，使用text encoder提取文本表征，使用vit提取对应图片的视觉表征，最大化文本和对应视觉表征的相似度，由此对齐文本和图片的信息。
+
 <div align="center">
   <img src="doc/clip_alg.png" alt="clip" width="650" height="260">
   <p style="font-size: 10px; color: gray;">clip思路</p>
