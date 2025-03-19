@@ -44,24 +44,24 @@
 
 * 多头注意力设计: 按照d_model对q,k,v进行折叠分组查询，参数量使用更少，最后通过一个ffn进行全局特征的交互，保证效果相当
 
-* 注意力mask: 在sequence上，保证当前token查询只能看到自己以及之前的token信息，模拟rnn的串行输出，在decoder的自注意力层使用causal-mask作用于`q*K^T`注意力得分实现，对mask掉的查询得分重置为负无穷，softmax后这些查询得到的注意力得分为0
+* 注意力mask: 在sequence上，保证当前token查询只能看到自己以及之前的token信息，模拟rnn的串行输出，在decoder的自注意力层使用causal-mask作用于`q*K^T`注意力得分实现，对mask掉的查询结果重置为负无穷，softmax后这些查询得到的注意力得分为0
 
 * 可训参数矩阵`Wq Wk Wv Wo`实现类似自动化特征工程的效果，如对一个token x计算`q=x*Wq, x为行向量, Wq形状为(in_feature, out_feature)`可以生成一个查询向量，查询优化方向和loss下降方向一致，torch中以nn.Linear线性层表示这些矩阵  
 
 * FFN前馈神经网络, 隐藏层维度设置`4*d_model`，特征向量映射在更高维的隐空间交互，实现类似特征增强的效果, 4这个值目前看没太多可解释意义，应该是基于最佳实验原则设计
 
-* pos embedding位置编码沿着sequence_length和d_model对应的两个维度对token embedding加上位置数值，标记位置信息。简单理解，在进行注意力计算`q*k^T`一个特征矩阵Q中任意一个数值通过向前diff和向上diff可以提取位置信息，模型可以学到这种模式
+* pos embedding位置编码沿着sequence_length和d_model对应的两个维度对token embedding加上位置数值，标记位置信息。简单理解，在进行注意力计算`q[pos_q]*k[pos_k]^T`计算得到的注意力得分和q的位置以及k的位置有关，由此可以解决不同的位置出现同一个token_id时，计算的注意力得分相近的情况
 
-* token embedding矩阵是可学习矩阵，实现将一个token_id转换为对应embedding向量，维度数量d_model。注意，与卷积 通道数值不同，每一个维度下的token向量值并不是指向某种性质，纵向对比没有意义
+* token embedding矩阵是可学习矩阵，实现将一个token_id转换为对应embedding向量，维度数量d_model。注意，与卷积网络的通道数值不同，token向量的每一个维度数值并不是指向某种性质，纵向对比不同token同一个维度数值没有意义
 
-* 训练阶段，对比rnn, transformer能够做到训练的并行，即输出一次性包含了所有输入片段的next token，这一点归功于causal-mask的设计, 模拟了信息串行
+* 训练阶段，对比rnn, transformer能够做到训练的并行，即输出一次性包含了所有输入片段的next token，这一点归功于causal-mask的设计, 模拟了信息串行。rnn由于本身的结构设计无法实现训练并行，具体参照[七.附录-(一)RNN]
 
 * 预测阶段，与rnn相同，transformer自回归预测下一个token，当出现终止符则停止
   
-**[论文](https://arxiv.org/abs/1706.03762)** 模型结构为encoder-decoder的结构，基于两个组件所衍生的自然语言经典模型见第四节
+**[论文](https://arxiv.org/abs/1706.03762)** 模型结构为encoder-decoder的结构，基于两个组件分别衍生出了经典的nlp模型，见第四节
 
 # 三. 代码解读
-根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的`ouput_head`是一个单独的线性层，与embeding层不共享权重。
+根据[周弈帆的博客-PyTorch Transformer 英中翻译超详细教程](https://zhouyifan.net/2023/06/11/20221106-transformer-pytorch/)手撕一遍transformer的代码，了解各个组件设计以及代码设计风格。该代码基本与transformer论文结构相同，唯一的区别在于最后的`ouput_head`是一个单独的线性层，与embeding层不共享权重
 
 
 # 四. 经典自然语言transformer
