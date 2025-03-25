@@ -329,11 +329,12 @@ if __name__ == '__main__':
     
     # batch, seq_len, 
     # multi
-    q = torch.ones((2, 120, 512))
+    q = torch.ones((2, 256, 512))
     k = torch.ones((2, 256, 512))
     v = torch.ones((2, 256, 512))
     mtl = MultiHeadAttention(8, 512)
-    mtl(q, k ,v)
+    res = mtl(q, k ,v)
+    print(res.shape)
 
 
     # mask_shape = (2, 1, 128, 256)
